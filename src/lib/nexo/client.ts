@@ -5,6 +5,23 @@ import { NUVEMSHOP_APP_ID } from '@/lib/config/app';
 
 let nexoApp: NexoClient | null = null;
 let connectPromise: Promise<void> | null = null;
+const NEXO_CONNECT_TIMEOUT_MS = 1200;
+
+function isEmbeddedContext(): boolean {
+  return typeof window !== 'undefined' && window.parent !== window;
+}
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => {
+      reject(new Error('NEXO_TIMEOUT'));
+    }, timeoutMs);
+
+    promise
+      .then(resolve, reject)
+      .finally(() => window.clearTimeout(timeout));
+  });
+}
 
 export function getNexoApp(): NexoClient {
   if (!nexoApp) {
@@ -20,6 +37,10 @@ export function getNexoApp(): NexoClient {
 }
 
 export function connectNexo(): Promise<void> {
+  if (!isEmbeddedContext()) {
+    return Promise.resolve();
+  }
+
   if (!connectPromise) {
     const { connect, iAmReady } = require('@tiendanube/nexo') as typeof import('@tiendanube/nexo');
     const app = getNexoApp();
@@ -37,10 +58,14 @@ export function connectNexo(): Promise<void> {
 }
 
 export async function getNexoSessionToken(): Promise<string | null> {
+  if (!isEmbeddedContext()) {
+    return null;
+  }
+
   try {
-    await connectNexo();
+    await withTimeout(connectNexo(), NEXO_CONNECT_TIMEOUT_MS);
     const { getSessionToken } = require('@tiendanube/nexo') as typeof import('@tiendanube/nexo');
-    return await getSessionToken(getNexoApp());
+    return await withTimeout(getSessionToken(getNexoApp()), NEXO_CONNECT_TIMEOUT_MS);
   } catch {
     // Outside the embedded admin, OAuth cookie auth can still be used.
     return null;
