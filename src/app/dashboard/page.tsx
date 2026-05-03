@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { AppShell } from '@/components/AppShell';
 import { fetchWithNexoAuth } from '@/lib/nexo/client';
 
 interface DashboardData {
@@ -23,31 +23,17 @@ const PERIODS = [
 
 function KpiCard({ label, value, sub, color = 'blue' }: { label: string; value: string; sub: string; color?: string }) {
   const colors: Record<string, string> = {
-    blue:   'bg-blue-50 text-blue-700',
-    green:  'bg-green-50 text-green-700',
-    yellow: 'bg-yellow-50 text-yellow-700',
-    gray:   'bg-gray-50 text-gray-700',
+    blue:   'bg-[#eef6ff] text-[#1b4f8a]',
+    green:  'bg-[var(--green-50)] text-[var(--green)]',
+    yellow: 'bg-[var(--amber-50)] text-[#8a6400]',
+    gray:   'bg-[var(--surface-2)] text-[var(--muted)]',
   };
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <p className="text-sm text-gray-500 mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${colors[color] ?? colors.gray} inline-block px-2 py-0.5 rounded`}>{value}</p>
-      <p className="text-xs text-gray-400 mt-1">{sub}</p>
+    <div className="pp-card p-5">
+      <p className="mb-2 text-sm font-semibold text-[var(--muted)]">{label}</p>
+      <p className={`font-display inline-block rounded px-2 py-0.5 text-2xl font-bold ${colors[color] ?? colors.gray}`}>{value}</p>
+      <p className="mt-2 text-xs text-[var(--muted-2)]">{sub}</p>
     </div>
-  );
-}
-
-function NavBar() {
-  return (
-    <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-6">
-        <span className="font-semibold text-gray-900">Page Pro</span>
-        <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">Analytics</Link>
-        <Link href="/products" className="text-sm text-gray-600 hover:text-gray-900">Produtos</Link>
-        <Link href="/import" className="text-sm text-gray-600 hover:text-gray-900">Importar</Link>
-        <Link href="/settings" className="text-sm text-gray-600 hover:text-gray-900">Configurações</Link>
-      </div>
-    </nav>
   );
 }
 
@@ -76,42 +62,35 @@ export default function DashboardPage() {
   const hasData = (data?.totalPageViews ?? 0) > 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavBar />
-      <main className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-            <p className="text-sm text-gray-500 mt-1">Impacto do Page Pro nas páginas de produto.</p>
-          </div>
-          <div className="flex items-center gap-3">
+    <AppShell
+      title="Analytics"
+      subtitle="Impacto do Page Pro nas páginas de produto."
+      actions={[
+        { label: loading ? 'Atualizando...' : 'Atualizar', onClick: () => load(period), variant: 'ghost', disabled: loading },
+      ]}
+    >
+        <div className="mb-6 flex justify-end">
+          <div className="flex items-center gap-2">
             <select
               value={period}
               onChange={(e) => setPeriod(Number(e.target.value))}
-              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 bg-white"
+              className="pp-input h-9 px-3"
             >
               {PERIODS.map((p) => (
                 <option key={p.value} value={p.value}>{p.label}</option>
               ))}
             </select>
-            <button
-              onClick={() => load(period)}
-              disabled={loading}
-              className="text-sm px-3 py-1.5 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 disabled:opacity-50"
-            >
-              Atualizar
-            </button>
           </div>
         </div>
 
         {!loading && !hasData && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 text-sm text-yellow-800">
+          <div className="mb-6 rounded-[10px] border border-[#f7dfaa] bg-[var(--amber-50)] p-4 text-sm font-medium text-[#8a6400]">
             Nenhum dado coletado ainda. Certifique-se de que o snippet está instalado no tema da sua loja.
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 text-sm text-red-700">{error}</div>
+          <div className="mb-6 rounded-[10px] border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">{error}</div>
         )}
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
@@ -123,23 +102,23 @@ export default function DashboardPage() {
         </div>
 
         {!loading && data?.topProducts && data.topProducts.length > 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-900">Top 10 produtos por visualizações</h2>
+          <div className="pp-card overflow-hidden">
+            <div className="border-b border-[var(--line)] px-6 py-4">
+              <h2 className="font-display text-lg font-bold">Top 10 produtos por visualizações</h2>
             </div>
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-500">
+              <thead className="bg-[var(--surface-2)] text-[var(--muted)]">
                 <tr>
                   <th className="text-left px-6 py-3">Produto</th>
                   <th className="text-left px-6 py-3">Template</th>
                   <th className="text-right px-6 py-3">Visualizações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[var(--line)]">
                 {data.topProducts.map((p) => (
-                  <tr key={p.productId} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 text-gray-900">{p.productName}</td>
-                    <td className="px-6 py-3 text-gray-500">{p.templateName}</td>
+                  <tr key={p.productId} className="hover:bg-[var(--background)]">
+                    <td className="px-6 py-3 text-[var(--foreground)]">{p.productName}</td>
+                    <td className="px-6 py-3 text-[var(--muted)]">{p.templateName}</td>
                     <td className="px-6 py-3 text-right font-medium">{p.pageViews.toLocaleString('pt-BR')}</td>
                   </tr>
                 ))}
@@ -148,10 +127,9 @@ export default function DashboardPage() {
           </div>
         )}
 
-        <p className="text-xs text-gray-400 mt-8">
+        <p className="mt-8 text-xs text-[var(--muted-2)]">
           Dados coletados via snippet instalado no tema. Eventos chegam em tempo real.
         </p>
-      </main>
-    </div>
+    </AppShell>
   );
 }

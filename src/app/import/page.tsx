@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import Link from 'next/link';
+import { AppShell } from '@/components/AppShell';
 import { fetchWithNexoAuth } from '@/lib/nexo/client';
 
 interface ImportJob {
@@ -14,23 +14,11 @@ interface ImportJob {
   createdAt: string;
 }
 
-function NavBar() {
-  return (
-    <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-6">
-      <span className="font-semibold text-gray-900">Page Pro</span>
-      <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">Analytics</Link>
-      <Link href="/products" className="text-sm text-gray-600 hover:text-gray-900">Produtos</Link>
-      <Link href="/import" className="text-sm text-blue-600 font-medium">Importar</Link>
-      <Link href="/settings" className="text-sm text-gray-600 hover:text-gray-900">Configurações</Link>
-    </nav>
-  );
-}
-
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  PENDING:               { label: 'Pendente',       color: 'text-gray-500 bg-gray-100' },
-  PROCESSING:            { label: 'Processando…',   color: 'text-blue-700 bg-blue-100' },
-  COMPLETED:             { label: 'Concluído',       color: 'text-green-700 bg-green-100' },
-  COMPLETED_WITH_ERRORS: { label: 'Com erros',       color: 'text-yellow-700 bg-yellow-100' },
+  PENDING:               { label: 'Pendente',       color: 'text-[var(--muted)] bg-[var(--surface-2)]' },
+  PROCESSING:            { label: 'Processando…',   color: 'text-[#1b4f8a] bg-[#eef6ff]' },
+  COMPLETED:             { label: 'Concluído',       color: 'text-[var(--green)] bg-[var(--green-50)]' },
+  COMPLETED_WITH_ERRORS: { label: 'Com erros',       color: 'text-[#8a6400] bg-[var(--amber-50)]' },
   FAILED:                { label: 'Falhou',          color: 'text-red-700 bg-red-100' },
 };
 
@@ -88,20 +76,17 @@ export default function ImportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <NavBar />
-      <main className="max-w-4xl mx-auto px-6 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Importação em massa</h1>
-        <p className="text-sm text-gray-500 mb-8">
-          Faça upload de uma planilha Excel (.xlsx) para aplicar blocos a múltiplos produtos de uma só vez.
-        </p>
-
+    <AppShell
+      title="Importação em massa"
+      subtitle="Faça upload de uma planilha Excel (.xlsx) para aplicar blocos a múltiplos produtos de uma só vez."
+      actions={[{ label: jobsLoaded ? 'Atualizar histórico' : 'Carregar histórico', onClick: loadJobs, variant: 'ghost' }]}
+    >
         {/* Upload */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-          <h2 className="font-semibold text-gray-900 mb-4">Upload da planilha</h2>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <p className="text-sm text-gray-500 mb-3">
-              Formato esperado das colunas: <code className="text-xs bg-gray-100 px-1 rounded">product_id, block_type, title, content, order, effect</code>
+        <div className="pp-card mb-8 p-6">
+          <h2 className="font-display mb-4 text-xl font-bold">Upload da planilha</h2>
+          <div className="rounded-[10px] border-2 border-dashed border-[var(--line-strong)] bg-[var(--surface-2)] p-8 text-center">
+            <p className="mb-3 text-sm text-[var(--muted)]">
+              Formato esperado das colunas: <code className="rounded bg-white px-1 text-xs">product_id, block_type, title, content, order, effect</code>
             </p>
             <input
               ref={fileRef}
@@ -113,7 +98,7 @@ export default function ImportPage() {
             />
             <label
               htmlFor="file-upload"
-              className={`inline-block cursor-pointer bg-blue-600 text-white text-sm px-6 py-2 rounded-lg hover:bg-blue-700 ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`pp-btn pp-btn-primary cursor-pointer ${uploading ? 'pointer-events-none opacity-50' : ''}`}
             >
               {uploading ? 'Processando…' : 'Selecionar planilha'}
             </label>
@@ -121,16 +106,16 @@ export default function ImportPage() {
         </div>
 
         {/* Histórico */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h2 className="font-semibold text-gray-900">Histórico de importações</h2>
-            <button onClick={loadJobs} className="text-sm text-blue-600 hover:underline">
+        <div className="pp-card overflow-hidden">
+          <div className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
+            <h2 className="font-display text-lg font-bold">Histórico de importações</h2>
+            <button onClick={loadJobs} className="text-sm font-bold text-[var(--pink)] hover:text-[var(--pink-deep)]">
               {jobsLoaded ? 'Atualizar' : 'Carregar histórico'}
             </button>
           </div>
           {jobsLoaded && (
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-500">
+              <thead className="bg-[var(--surface-2)] text-[var(--muted)]">
                 <tr>
                   <th className="text-left px-6 py-3">Arquivo</th>
                   <th className="text-right px-6 py-3">Total</th>
@@ -139,19 +124,19 @@ export default function ImportPage() {
                   <th className="text-left px-6 py-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-[var(--line)]">
                 {jobs.length === 0 ? (
-                  <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-500">Nenhuma importação ainda.</td></tr>
+                  <tr><td colSpan={5} className="px-6 py-8 text-center text-[var(--muted)]">Nenhuma importação ainda.</td></tr>
                 ) : jobs.map((job) => {
                   const st = STATUS_LABELS[job.status] ?? { label: job.status, color: 'text-gray-500 bg-gray-100' };
                   return (
                     <tr key={job.id}>
-                      <td className="px-6 py-3 text-gray-900">{job.fileName}</td>
+                      <td className="px-6 py-3 font-semibold text-[var(--foreground)]">{job.fileName}</td>
                       <td className="px-6 py-3 text-right">{job.totalRows}</td>
                       <td className="px-6 py-3 text-right">{job.processedRows}</td>
                       <td className="px-6 py-3 text-right">{job.errorRows}</td>
                       <td className="px-6 py-3">
-                        <span className={`inline-block text-xs px-2 py-0.5 rounded-full ${st.color}`}>{st.label}</span>
+                        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-bold ${st.color}`}>{st.label}</span>
                       </td>
                     </tr>
                   );
@@ -160,7 +145,6 @@ export default function ImportPage() {
             </table>
           )}
         </div>
-      </main>
-    </div>
+    </AppShell>
   );
 }

@@ -1,9 +1,10 @@
 'use client';
 
 import { Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { AppShell } from '@/components/AppShell';
 import { BlockEditor } from '@/components/editor/BlockEditor';
 import type { BlockType, BlockEffect } from '@/types/blocks';
 import { fetchWithNexoAuth } from '@/lib/nexo/client';
@@ -20,7 +21,6 @@ interface BlockData {
 
 function EditorContent() {
   const params = useSearchParams();
-  const router = useRouter();
   const productId = Number(params.get('productId'));
   const productName = params.get('productName') ?? `Produto ${productId}`;
 
@@ -59,41 +59,40 @@ function EditorContent() {
 
   if (!productId) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Selecione um produto em <Link href="/products" className="text-blue-600 hover:underline">Produtos</Link>.</p>
-      </div>
+      <AppShell title="Editor" subtitle="Selecione um produto para editar seus blocos.">
+        <div className="pp-card p-8 text-sm text-[var(--muted)]">
+          Selecione um produto em <Link href="/products" className="font-bold text-[var(--pink)] hover:text-[var(--pink-deep)]">Produtos</Link>.
+        </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      {/* Top bar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/products" className="text-sm text-gray-500 hover:text-gray-700">← Produtos</Link>
-          <div>
-            <p className="font-semibold text-gray-900 text-sm">{productName}</p>
-            <p className="text-xs text-gray-400">ID: {productId}</p>
-          </div>
+    <AppShell
+      title={productName}
+      subtitle={`ID: ${productId}`}
+      eyebrow="Produtos"
+      showPageHeader={false}
+      contentClassName="flex h-full flex-col p-0"
+      actions={[
+        { label: 'Voltar para produtos', href: '/products', variant: 'ghost' },
+        { label: saving ? 'Salvando...' : saved ? 'Salvo' : 'Salvar e publicar', onClick: handleSave, disabled: saving },
+      ]}
+    >
+      <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-[var(--line)] bg-white px-5">
+        <div>
+          <p className="font-display text-lg font-bold">{productName}</p>
+          <p className="text-xs text-[var(--muted-2)]">Produto {productId}</p>
         </div>
-        <div className="flex items-center gap-3">
-          {saved && <span className="text-sm text-green-600">✓ Salvo</span>}
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="bg-blue-600 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            {saving ? 'Salvando…' : 'Salvar e publicar'}
-          </button>
-        </div>
+        {saved && <span className="rounded-full bg-[var(--green-50)] px-3 py-1 text-xs font-bold text-[var(--green)]">Publicado</span>}
       </div>
 
       {loading ? (
-        <div className="flex-1 flex items-center justify-center text-gray-500">Carregando...</div>
+        <div className="flex flex-1 items-center justify-center text-[var(--muted)]">Carregando...</div>
       ) : (
         <BlockEditor blocks={blocks} onChange={setBlocks} />
       )}
-    </div>
+    </AppShell>
   );
 }
 
