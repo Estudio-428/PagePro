@@ -16,7 +16,7 @@ const TemplateSchema = z.object({
 // GET /api/templates
 export async function GET(request: NextRequest) {
   try {
-    const storeId = await requireAuth();
+    const storeId = await requireAuth(request);
     const templateId = request.nextUrl.searchParams.get('id');
 
     if (templateId) {
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 // POST /api/templates — criar
 export async function POST(request: NextRequest) {
   try {
-    const storeId = await requireAuth();
+    const storeId = await requireAuth(request);
     const body = await request.json();
     const data = TemplateSchema.parse(body);
 
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 // PUT /api/templates?id=123 — atualizar
 export async function PUT(request: NextRequest) {
   try {
-    const storeId = await requireAuth();
+    const storeId = await requireAuth(request);
     const templateId = Number(request.nextUrl.searchParams.get('id'));
     if (!templateId) return NextResponse.json({ error: 'id obrigatório' }, { status: 400 });
 
@@ -99,7 +99,7 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/templates?id=123 — desativar (soft delete)
 export async function DELETE(request: NextRequest) {
   try {
-    const storeId = await requireAuth();
+    const storeId = await requireAuth(request);
     const templateId = Number(request.nextUrl.searchParams.get('id'));
     if (!templateId) return NextResponse.json({ error: 'id obrigatório' }, { status: 400 });
 

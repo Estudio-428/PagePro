@@ -20,7 +20,7 @@ const BlockSchema = z.object({
 // GET /api/blocks?productId=123
 export async function GET(request: NextRequest) {
   try {
-    const storeId = await requireAuth();
+    const storeId = await requireAuth(request);
     const productId = Number(request.nextUrl.searchParams.get('productId'));
 
     if (!productId) {
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 // POST /api/blocks — salva todos os blocos de um produto e publica no metafield
 export async function POST(request: NextRequest) {
   try {
-    const storeId = await requireAuth();
+    const storeId = await requireAuth(request);
     const body = await request.json();
 
     const { productId, productName, productHandle, blocks } = body;

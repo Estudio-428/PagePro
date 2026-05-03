@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 // GET /api/products?page=1&per_page=50
 export async function GET(request: NextRequest) {
   try {
-    const storeId = await requireAuth();
+    const storeId = await requireAuth(request);
     const { searchParams } = request.nextUrl;
     const page = Number(searchParams.get('page') ?? '1');
     const perPage = Math.min(Number(searchParams.get('per_page') ?? '50'), 200);

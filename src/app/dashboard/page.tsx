@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { fetchWithNexoAuth } from '@/lib/nexo/client';
 
 interface DashboardData {
   period: number;
@@ -60,7 +61,7 @@ export default function DashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/analytics/dashboard?period=${p}`);
+      const res = await fetchWithNexoAuth(`/api/analytics/dashboard?period=${p}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setData(await res.json());
     } catch (e) {

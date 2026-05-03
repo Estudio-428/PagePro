@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { fetchWithNexoAuth } from '@/lib/nexo/client';
 
 interface Template {
   id: number;
@@ -28,7 +29,7 @@ export function ApplyTemplateModal({ templates, productId, productName, onClose,
     setError('');
 
     try {
-      const res = await fetch('/api/blocks', {
+      const res = await fetchWithNexoAuth('/api/blocks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

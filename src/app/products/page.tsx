@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { fetchWithNexoAuth } from '@/lib/nexo/client';
 
 interface Product {
   id: number;
@@ -31,7 +32,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/products?page=${page}&per_page=50`)
+    fetchWithNexoAuth(`/api/products?page=${page}&per_page=50`)
       .then((r) => r.json())
       .then((d) => setProducts(d.products ?? []))
       .finally(() => setLoading(false));

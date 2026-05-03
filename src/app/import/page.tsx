@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import Link from 'next/link';
+import { fetchWithNexoAuth } from '@/lib/nexo/client';
 
 interface ImportJob {
   id: number;
@@ -40,7 +41,7 @@ export default function ImportPage() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function loadJobs() {
-    const res = await fetch('/api/import');
+    const res = await fetchWithNexoAuth('/api/import');
     const d = await res.json();
     setJobs(d.jobs ?? []);
     setJobsLoaded(true);
@@ -69,7 +70,7 @@ export default function ImportPage() {
         };
       });
 
-      const res = await fetch('/api/import', {
+      const res = await fetchWithNexoAuth('/api/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ fileName: file.name, rows }),

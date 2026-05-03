@@ -6,8 +6,6 @@ import { nuvemshopRequest } from '@/lib/nuvemshop/api-client';
 
 export const dynamic = 'force-dynamic';
 
-const WEBHOOK_URL = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/nuvemshop`;
-
 const WEBHOOKS_TO_REGISTER = [
   'app/uninstalled',
   'product/created',
@@ -15,18 +13,28 @@ const WEBHOOKS_TO_REGISTER = [
   'product/deleted',
 ];
 
-async function registerWebhooks(storeId: number) {
+function getAppBaseUrl(request: NextRequest): string {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (configured && !configured.includes('localhost') && !configured.includes('127.0.0.1')) {
+    return configured.replace(/\/$/, '');
+  }
+
+  return new URL(request.url).origin;
+}
+
+async function registerWebhooks(storeId: number, appBaseUrl: string) {
   try {
+    const webhookUrl = `${appBaseUrl}/api/webhooks/nuvemshop`;
     const existing = await nuvemshopRequest<{ event: string }[]>(storeId, '/webhooks');
-    const existingEvents = new Set(existing.map((w) => w.event));
+    const existingKeys = new Set(existing.map((w) => `${w.event}:${(w as { url?: string }).url ?? ''}`));
 
     await Promise.allSettled(
       WEBHOOKS_TO_REGISTER
-        .filter((event) => !existingEvents.has(event))
+        .filter((event) => !existingKeys.has(`${event}:${webhookUrl}`))
         .map((event) =>
           nuvemshopRequest(storeId, '/webhooks', {
             method: 'POST',
-            body: { event, url: WEBHOOK_URL },
+            body: { event, url: webhookUrl },
           })
         )
     );
@@ -39,6 +47,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const storeId = searchParams.get('store_id');
+  const appBaseUrl = getAppBaseUrl(request);
 
   if (!code || !storeId) {
     return NextResponse.redirect(
@@ -67,6 +76,11 @@ export async function GET(request: NextRequest) {
 
     const { access_token, scope, user_id } = await tokenRes.json();
     const numericStoreId = Number(user_id);
+    const callbackStoreId = Number(storeId);
+
+    if (!Number.isInteger(numericStoreId) || numericStoreId !== callbackStoreId) {
+      throw new Error('OAuth store mismatch');
+    }
 
     await prisma.store.upsert({
       where: { storeId: numericStoreId },
@@ -84,8 +98,8 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Register webhooks after install (fire-and-forget — non-blocking)
-    registerWebhooks(numericStoreId);
+    // Register webhooks after install. Do not block install if the platform rejects one event.
+    await registerWebhooks(numericStoreId, appBaseUrl);
 
     const session = await getSession();
     session.storeId = numericStoreId;
@@ -93,7 +107,7 @@ export async function GET(request: NextRequest) {
     await session.save();
 
     return NextResponse.redirect(
-      new URL('/dashboard', process.env.NEXT_PUBLIC_APP_URL!)
+      new URL('/dashboard', appBaseUrl)
     );
   } catch (error) {
     console.error('OAuth callback error:', error);

@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 // POST /api/import — recebe JSON pré-parseado do XLSX (parsing feito no frontend com SheetJS)
 export async function POST(request: NextRequest) {
   try {
-    const storeId = await requireAuth();
+    const storeId = await requireAuth(request);
     const { fileName, rows } = await request.json();
 
     if (!rows || !Array.isArray(rows) || rows.length === 0) {
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 // GET /api/import?jobId=123 — status do job
 export async function GET(request: NextRequest) {
   try {
-    const storeId = await requireAuth();
+    const storeId = await requireAuth(request);
     const jobId = Number(request.nextUrl.searchParams.get('jobId'));
 
     if (!jobId) {

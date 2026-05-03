@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BlockEditor } from '@/components/editor/BlockEditor';
 import type { BlockType, BlockEffect } from '@/types/blocks';
+import { fetchWithNexoAuth } from '@/lib/nexo/client';
 
 interface BlockData {
   id?: number;
@@ -30,7 +31,7 @@ function EditorContent() {
 
   useEffect(() => {
     if (!productId) return;
-    fetch(`/api/blocks?productId=${productId}`)
+    fetchWithNexoAuth(`/api/blocks?productId=${productId}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.config?.blocks) setBlocks(d.config.blocks);
@@ -41,7 +42,7 @@ function EditorContent() {
   async function handleSave() {
     setSaving(true);
     try {
-      const res = await fetch('/api/blocks', {
+      const res = await fetchWithNexoAuth('/api/blocks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId, productName, blocks }),

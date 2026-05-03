@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    const storeId = await requireAuth();
+    const storeId = await requireAuth(request);
     const { searchParams } = new URL(request.url);
     const period = Math.min(parseInt(searchParams.get('period') ?? '30'), 90);
 

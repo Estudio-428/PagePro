@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BlockEditor } from './BlockEditor';
 import type { BlockType, BlockEffect } from '@/types/blocks';
+import { fetchWithNexoAuth } from '@/lib/nexo/client';
 
 interface BlockData {
   id?: number;
@@ -37,7 +38,7 @@ export function TemplateEditor({ templateId, initialName = '', initialBlocks = [
       const method = templateId ? 'PUT' : 'POST';
       const url = templateId ? `/api/templates?id=${templateId}` : '/api/templates';
 
-      const res = await fetch(url, {
+      const res = await fetchWithNexoAuth(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, blocks }),
