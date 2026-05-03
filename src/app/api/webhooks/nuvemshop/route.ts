@@ -7,9 +7,12 @@ function verifyHmac(body: Buffer, signature: string): boolean {
   if (!signature) return false;
   const expected = createHmac('sha256', process.env.NUVEMSHOP_CLIENT_SECRET!)
     .update(body)
-    .digest('base64');
+    .digest('hex');
   try {
-    return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+    return timingSafeEqual(
+      Buffer.from(expected, 'hex'),
+      Buffer.from(signature, 'hex'),
+    );
   } catch {
     return false;
   }
