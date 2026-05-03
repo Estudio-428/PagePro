@@ -29,12 +29,21 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
+    setError(null);
     fetchWithNexoAuth(`/api/products?page=${page}&per_page=50`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
       .then((d) => setProducts(d.products ?? []))
+      .catch(() => {
+        setProducts([]);
+        setError('Não foi possível carregar os produtos.');
+      })
       .finally(() => setLoading(false));
   }, [page]);
 
@@ -69,6 +78,10 @@ export default function ProductsPage() {
 
         {loading ? (
           <div className="text-center py-12 text-gray-500">Carregando produtos...</div>
+        ) : error ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-6 py-4 text-sm text-red-700">
+            {error}
+          </div>
         ) : (
           <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <table className="w-full text-sm">

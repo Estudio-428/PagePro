@@ -44,15 +44,15 @@ export async function GET(request: NextRequest) {
         take: 10,
       }),
 
-      prisma.$queryRaw<Array<{ day: Date; event_type: string; count: bigint }>>`
+      prisma.$queryRaw<Array<{ day: Date; eventType: string; count: bigint }>>`
         SELECT
-          DATE_TRUNC('day', created_at) as day,
-          event_type,
+          DATE_TRUNC('day', "createdAt") as day,
+          "eventType",
           COUNT(*) as count
         FROM analytics_events
-        WHERE store_id = ${storeId}
-          AND created_at >= ${since}
-        GROUP BY DATE_TRUNC('day', created_at), event_type
+        WHERE "storeId" = ${storeId}
+          AND "createdAt" >= ${since}
+        GROUP BY DATE_TRUNC('day', "createdAt"), "eventType"
         ORDER BY day ASC
       `,
 
@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
 }
 
 function buildEventsByDay(
-  raw: Array<{ day: Date; event_type: string; count: bigint }>,
+  raw: Array<{ day: Date; eventType: string; count: bigint }>,
   period: number
 ): Array<{ date: string; pageViews: number; interactions: number }> {
   const days: Record<string, { pageViews: number; interactions: number }> = {};
@@ -135,7 +135,7 @@ function buildEventsByDay(
     const key = new Date(row.day).toISOString().slice(0, 10);
     if (!days[key]) return;
     const count = Number(row.count);
-    if (row.event_type === 'page_view') days[key].pageViews += count;
+    if (row.eventType === 'page_view') days[key].pageViews += count;
     else days[key].interactions += count;
   });
 
