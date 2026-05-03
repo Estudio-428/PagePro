@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import { NUVEMSHOP_APP_ID } from '@/lib/config/app';
 
 const MESSAGES: Record<string, string> = {
   missing_params: 'Parâmetros de autorização ausentes.',
@@ -20,7 +21,7 @@ function ErrorContent() {
         <h1 className="text-xl font-semibold text-gray-900 mb-2">Erro de autenticação</h1>
         <p className="text-gray-600 mb-6">{message}</p>
         <a
-          href={`https://www.tiendanube.com/apps/${process.env.NEXT_PUBLIC_APP_ID ?? ''}/authorize`}
+          href={`https://www.tiendanube.com/apps/${NUVEMSHOP_APP_ID}/authorize`}
           className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           Tentar novamente

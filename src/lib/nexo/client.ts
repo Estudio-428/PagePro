@@ -1,6 +1,7 @@
 'use client';
 
 import type { NexoClient } from '@tiendanube/nexo';
+import { NUVEMSHOP_APP_ID } from '@/lib/config/app';
 
 let nexoApp: NexoClient | null = null;
 let connectPromise: Promise<void> | null = null;
@@ -10,7 +11,7 @@ export function getNexoApp(): NexoClient {
     // Nexo touches window during create(), so keep this strictly client-side.
     const { create } = require('@tiendanube/nexo') as typeof import('@tiendanube/nexo');
     nexoApp = create({
-      clientId: process.env.NEXT_PUBLIC_APP_ID ?? '',
+      clientId: NUVEMSHOP_APP_ID,
       log: process.env.NODE_ENV === 'development',
     });
   }
