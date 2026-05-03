@@ -10,9 +10,10 @@ const sessionOptions: SessionOptions = {
   password: process.env.SESSION_SECRET!,
   cookieName: 'page_pro_session',
   cookieOptions: {
-    secure: process.env.NODE_ENV === 'production',
+    // none+secure obrigatório para apps embarcados em iframe cross-origin
+    secure: true,
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: 'none',
     maxAge: 60 * 60 * 24 * 7, // 7 dias
   },
 };
