@@ -1,0 +1,250 @@
+// Prisma Schema — Product Page Builder (Nuvemshop App)
+// Multi-tenant por store_id — schema MERGED (editor + templates + analytics)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Credenciais OAuth por loja (núcleo multi-tenant)
+// ============================================
+model Store {
+  id            Int       @id @default(autoincrement())
+  storeId       Int       @unique
+  accessToken   String?   // AES-256-GCM encrypted
+  scopes        String
+  storeName     String?
+  storeUrl      String?
+  country       String?   @default("BR")
+  language      String?   @default("pt")
+  installedAt   DateTime  @default(now())
+  uninstalledAt DateTime?
+  redactedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  productConfigs  ProductConfig[]
+  templates       Template[]
+  productLinks    ProductLink[]
+  rules           AutoRule[]
+  importJobs      ImportJob[]
+  webhookEvents   WebhookEvent[]
+  analyticsEvents AnalyticsEvent[]
+
+  @@map("stores")
+}
+
+// ============================================
+// Configuração de blocos por produto (editor direto)
+// ============================================
+model ProductConfig {
+  id            Int      @id @default(autoincrement())
+  storeId       Int
+  productId     Int      // ID do produto na Nuvemshop
+  productName   String?  // cache do nome para listagem
+  productHandle String?  // slug para preview
+  isActive      Boolean  @default(true)
+  metafieldId   Int?     // ID do metafield salvo na Nuvemshop
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  store  Store   @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+  blocks Block[]
+
+  @@unique([storeId, productId])
+  @@index([storeId])
+  @@map("product_configs")
+}
+
+// ============================================
+// Blocos de conteúdo individuais
+// ============================================
+model Block {
+  id              Int         @id @default(autoincrement())
+  productConfigId Int
+  type            BlockType
+  title           String?
+  content         Json        // conteúdo específico por tipo (ver types/blocks.ts)
+  order           Int         @default(0)
+  effect          BlockEffect @default(NONE)
+  isVisible       Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  productConfig ProductConfig @relation(fields: [productConfigId], references: [id], onDelete: Cascade)
+
+  @@index([productConfigId])
+  @@map("blocks")
+}
+
+enum BlockType {
+  DESCRIPTION  // texto rico (rich text / HTML)
+  FEATURES     // lista de características com ícones
+  IMAGES       // galeria de imagens adicionais
+  BADGES       // selos (garantia, entrega, qualidade, etc.)
+  TABLE        // tabela de especificações / comparativo
+  INFO_BOX     // caixa de informação destacada
+  SEO_TEXT     // texto SEO (oculto visualmente ou colapsado)
+  VIDEO        // embed de vídeo (YouTube/Vimeo)
+  FAQ          // perguntas e respostas
+  CUSTOM_HTML  // HTML livre (avançado)
+}
+
+enum BlockEffect {
+  NONE      // sempre visível
+  ACCORDION // sanfona: título clicável expande/recolhe
+  COLLAPSE  // ver mais / ver menos
+  TABS      // grupo de blocos em abas
+}
+
+// ============================================
+// Templates reutilizáveis de layout
+// ============================================
+model Template {
+  id          Int      @id @default(autoincrement())
+  storeId     Int
+  name        String
+  description String?
+  thumbnail   String?  // URL de preview gerado
+  blocks      Json     // snapshot dos blocos: [{ type, title, content, effect, order }]
+  isActive    Boolean  @default(true)
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  store    Store         @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+  products ProductLink[]
+  rules    AutoRule[]
+
+  @@index([storeId])
+  @@map("templates")
+}
+
+// ============================================
+// Produtos vinculados a templates
+// ============================================
+model ProductLink {
+  id                 Int      @id @default(autoincrement())
+  storeId            Int
+  templateId         Int
+  nuvemshopProductId Int
+  productName        String
+  appliedAt          DateTime @default(now())
+  appliedBy          String   @default("manual") // manual | bulk | rule
+
+  store    Store    @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+  template Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, nuvemshopProductId]) // 1 template por produto
+  @@index([storeId])
+  @@map("product_links")
+}
+
+// ============================================
+// Regras automáticas de aplicação
+// ============================================
+model AutoRule {
+  id         Int      @id @default(autoincrement())
+  storeId    Int
+  templateId Int
+  name       String
+  ruleType   String   // category | tag | price_range
+  ruleValue  Json     // { categoryId } | { tag } | { min, max }
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  store    Store    @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+  template Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@map("auto_rules")
+}
+
+// ============================================
+// Jobs de importação em massa (planilha)
+// ============================================
+model ImportJob {
+  id            Int          @id @default(autoincrement())
+  storeId       Int
+  fileName      String
+  totalRows     Int          @default(0)
+  processedRows Int          @default(0)
+  errorRows     Int          @default(0)
+  status        ImportStatus @default(PENDING)
+  errorsJson    Json?        // array de { row, productId, message }
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  store Store @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+
+  @@index([storeId, status])
+  @@map("import_jobs")
+}
+
+enum ImportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  COMPLETED_WITH_ERRORS
+  FAILED
+}
+
+// ============================================
+// Eventos de analytics (conversão, interação)
+// ============================================
+model AnalyticsEvent {
+  id         Int      @id @default(autoincrement())
+  storeId    Int
+  productId  Int
+  eventType  String   // page_view | block_interaction | faq_open | video_play | scroll_depth
+  templateId Int?
+  metadata   Json?    // dados adicionais: { blockType, depth, duration }
+  createdAt  DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+
+  @@index([storeId, productId])
+  @@index([storeId, eventType])
+  @@index([createdAt])
+  @@map("analytics_events")
+}
+
+// ============================================
+// Log de webhooks (idempotência)
+// ============================================
+model WebhookEvent {
+  id          Int      @id @default(autoincrement())
+  storeId     Int
+  eventKey    String   // "event_type:resource_id"
+  processedAt DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+
+  @@unique([storeId, eventKey])
+  @@index([storeId])
+  @@map("webhook_events")
+}
+
+// ============================================
+// LGPD — solicitações de portabilidade de dados
+// ============================================
+model DataExportRequest {
+  id          Int       @id @default(autoincrement())
+  storeId     Int
+  customerId  Int
+  requestedAt DateTime  @default(now())
+  processedAt DateTime?
+  status      String    @default("pending")
+  dataJson    String?
+
+  @@index([storeId, status])
+  @@map("data_export_requests")
+}

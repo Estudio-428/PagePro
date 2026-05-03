@@ -1,0 +1,148 @@
+// Prisma Schema — Página Pro (Nuvemshop App)
+// Multi-tenant por store_id
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// Credenciais OAuth por loja
+// ============================================
+model Store {
+  id            Int       @id @default(autoincrement())
+  storeId       Int       @unique
+  accessToken   String?   // AES-256-GCM encrypted
+  scopes        String
+  installedAt   DateTime  @default(now())
+  uninstalledAt DateTime?
+  redactedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  templates       Template[]
+  products        ProductLink[]
+  rules           AutoRule[]
+  webhookEvents   WebhookEvent[]
+  analyticsEvents AnalyticsEvent[]
+
+  @@map("stores")
+}
+
+// ============================================
+// Templates de blocos
+// ============================================
+model Template {
+  id          Int      @id @default(autoincrement())
+  storeId     Int
+  name        String
+  description String?
+  blocks      Json     // Array de blocos: [{ type, config, order }]
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  store    Store         @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+  products ProductLink[]
+  rules    AutoRule[]
+
+  @@index([storeId])
+  @@map("templates")
+}
+
+// ============================================
+// Produtos vinculados a templates
+// ============================================
+model ProductLink {
+  id                Int      @id @default(autoincrement())
+  storeId           Int
+  templateId        Int
+  nuvemshopProductId Int
+  productName       String
+  appliedAt         DateTime @default(now())
+  appliedBy         String   @default("manual") // manual | bulk | rule
+
+  store    Store    @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+  template Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, nuvemshopProductId]) // 1 template por produto
+  @@index([storeId])
+  @@map("product_links")
+}
+
+// ============================================
+// Regras automáticas de aplicação
+// ============================================
+model AutoRule {
+  id         Int      @id @default(autoincrement())
+  storeId    Int
+  templateId Int
+  name       String
+  ruleType   String   // category | tag | price_range
+  ruleValue  Json     // { categoryId } | { tag } | { min, max }
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  store    Store    @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+  template Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@map("auto_rules")
+}
+
+// ============================================
+// Eventos de analytics (conversão, interação)
+// ============================================
+model AnalyticsEvent {
+  id         Int      @id @default(autoincrement())
+  storeId    Int
+  productId  Int
+  eventType  String   // page_view | block_interaction | faq_open | video_play | scroll_depth
+  templateId Int?
+  metadata   Json?    // dados adicionais: { blockType, depth, duration }
+  createdAt  DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+
+  @@index([storeId, productId])
+  @@index([storeId, eventType])
+  @@index([createdAt])
+  @@map("analytics_events")
+}
+
+// ============================================
+// Log de webhooks (idempotência)
+// ============================================
+model WebhookEvent {
+  id          Int      @id @default(autoincrement())
+  storeId     Int
+  eventKey    String
+  processedAt DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [storeId], onDelete: Cascade)
+
+  @@unique([storeId, eventKey])
+  @@index([storeId])
+  @@map("webhook_events")
+}
+
+// ============================================
+// Solicitações LGPD
+// ============================================
+model DataExportRequest {
+  id          Int      @id @default(autoincrement())
+  storeId     Int
+  customerId  Int
+  requestedAt DateTime @default(now())
+  processedAt DateTime?
+  status      String   @default("pending")
+  data        String?
+
+  @@index([storeId, status])
+  @@map("data_export_requests")
+}
