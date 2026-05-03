@@ -124,8 +124,8 @@ export async function getProductMetafield(
   try {
     const fields = await nuvemshopRequest<NuvemshopMetafield[]>(
       storeId,
-      `/products/${productId}/metafields`,
-      { params: { namespace: METAFIELD_NAMESPACE, key: METAFIELD_KEY } }
+      '/metafields/products',
+      { params: { owner_id: productId, namespace: METAFIELD_NAMESPACE, key: METAFIELD_KEY } }
     );
     return fields?.[0] ?? null;
   } catch {
@@ -142,7 +142,7 @@ export async function upsertProductMetafield(
   if (existingMetafieldId) {
     return nuvemshopRequest<NuvemshopMetafield>(
       storeId,
-      `/products/${productId}/metafields/${existingMetafieldId}`,
+      `/metafields/${existingMetafieldId}`,
       {
         method: 'PUT',
         body: { value },
@@ -152,7 +152,7 @@ export async function upsertProductMetafield(
 
   return nuvemshopRequest<NuvemshopMetafield>(
     storeId,
-    `/products/${productId}/metafields`,
+    '/metafields',
     {
       method: 'POST',
       body: {
