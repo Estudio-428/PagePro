@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Product Page Builder',
+  title: 'Page Pro',
   description: 'Customize as páginas de produto da sua loja Nuvemshop com blocos dinâmicos.',
 };
 

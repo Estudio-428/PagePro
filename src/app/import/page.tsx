@@ -16,7 +16,7 @@ interface ImportJob {
 function NavBar() {
   return (
     <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-6">
-      <span className="font-semibold text-gray-900">Product Page Builder</span>
+      <span className="font-semibold text-gray-900">Page Pro</span>
       <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">Analytics</Link>
       <Link href="/products" className="text-sm text-gray-600 hover:text-gray-900">Produtos</Link>
       <Link href="/import" className="text-sm text-blue-600 font-medium">Importar</Link>

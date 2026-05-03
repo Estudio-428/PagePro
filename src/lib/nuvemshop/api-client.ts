@@ -46,7 +46,7 @@ export async function nuvemshopRequest<T>(
       headers: {
         'Authentication': `bearer ${token}`,
         'Content-Type': 'application/json',
-        'User-Agent': 'ProductPageBuilder/1.0',
+        'User-Agent': 'PagePro/1.0',
       },
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
@@ -114,7 +114,7 @@ export interface NuvemshopMetafield {
   owner_id: number;
 }
 
-export const METAFIELD_NAMESPACE = 'product_page_builder';
+export const METAFIELD_NAMESPACE = 'page_pro';
 export const METAFIELD_KEY = 'page_blocks';
 
 export async function getProductMetafield(
@@ -159,7 +159,7 @@ export async function upsertProductMetafield(
         namespace: METAFIELD_NAMESPACE,
         key: METAFIELD_KEY,
         value,
-        description: 'Blocos de conteúdo - Product Page Builder',
+        description: 'Blocos de conteúdo - Page Pro',
         owner_resource: 'Product',
         owner_id: productId,
       },

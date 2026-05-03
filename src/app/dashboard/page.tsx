@@ -40,7 +40,7 @@ function NavBar() {
   return (
     <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
       <div className="flex items-center gap-6">
-        <span className="font-semibold text-gray-900">Product Page Builder</span>
+        <span className="font-semibold text-gray-900">Page Pro</span>
         <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">Analytics</Link>
         <Link href="/products" className="text-sm text-gray-600 hover:text-gray-900">Produtos</Link>
         <Link href="/import" className="text-sm text-gray-600 hover:text-gray-900">Importar</Link>
@@ -81,7 +81,7 @@ export default function DashboardPage() {
         <div className="flex items-start justify-between mb-6 flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-            <p className="text-sm text-gray-500 mt-1">Impacto do Product Page Builder nas páginas de produto.</p>
+            <p className="text-sm text-gray-500 mt-1">Impacto do Page Pro nas páginas de produto.</p>
           </div>
           <div className="flex items-center gap-3">
             <select

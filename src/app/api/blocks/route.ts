@@ -6,6 +6,8 @@ import { upsertProductMetafield } from '@/lib/nuvemshop/api-client';
 import { serializeBlocksForStorefront } from '@/lib/blocks/serializer';
 import { z } from 'zod';
 
+export const dynamic = 'force-dynamic';
+
 const BlockSchema = z.object({
   type: z.enum(['DESCRIPTION', 'FEATURES', 'IMAGES', 'BADGES', 'TABLE', 'INFO_BOX', 'SEO_TEXT', 'VIDEO', 'FAQ', 'CUSTOM_HTML']),
   title: z.string().optional(),

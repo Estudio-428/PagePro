@@ -6,6 +6,8 @@ import { upsertProductMetafield } from '@/lib/nuvemshop/api-client';
 import { serializeBlocksForStorefront } from '@/lib/blocks/serializer';
 import type { ImportRowError } from '@/types/blocks';
 
+export const dynamic = 'force-dynamic';
+
 // POST /api/import — recebe JSON pré-parseado do XLSX (parsing feito no frontend com SheetJS)
 export async function POST(request: NextRequest) {
   try {

@@ -21,8 +21,8 @@
 .env.test.local
 .env.production.local
 
-# prisma
-/prisma/migrations/*.sql
+# prisma — migrations DEVEM ser commitadas
+# /prisma/migrations/*.sql
 
 # vercel / railway
 .vercel

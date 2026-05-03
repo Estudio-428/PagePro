@@ -1,5 +1,5 @@
 {
-  "name": "product-page-builder",
+  "name": "page-pro",
   "prisma": {
     "schema": "prisma/schema.prisma"
   },

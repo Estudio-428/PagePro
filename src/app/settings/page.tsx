@@ -5,7 +5,7 @@ import Link from 'next/link';
 function NavBar() {
   return (
     <nav className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-6">
-      <span className="font-semibold text-gray-900">Product Page Builder</span>
+      <span className="font-semibold text-gray-900">Page Pro</span>
       <Link href="/dashboard" className="text-sm text-gray-600 hover:text-gray-900">Analytics</Link>
       <Link href="/products" className="text-sm text-gray-600 hover:text-gray-900">Produtos</Link>
       <Link href="/import" className="text-sm text-gray-600 hover:text-gray-900">Importar</Link>
@@ -14,10 +14,10 @@ function NavBar() {
   );
 }
 
-const SNIPPET_CODE = `{% if product.metafields.product_page_builder.page_blocks %}
+const SNIPPET_CODE = `{% if product.metafields.page_pro.page_blocks %}
   <div id="ppb-container"
        data-product-id="{{ product.id }}"
-       data-blocks="{{ product.metafields.product_page_builder.page_blocks | escape }}">
+       data-blocks="{{ product.metafields.page_pro.page_blocks | escape }}">
   </div>
   <link rel="stylesheet" href="{{ 'ppb.css' | asset_url }}">
   <script src="{{ 'ppb.js' | asset_url }}" defer></script>

@@ -3,6 +3,8 @@ import { requireAuth } from '@/lib/auth/session';
 import { listProducts, getProduct } from '@/lib/nuvemshop/api-client';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/products?page=1&per_page=50
 export async function GET(request: NextRequest) {
   try {

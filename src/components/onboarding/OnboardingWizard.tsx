@@ -21,10 +21,10 @@ const STEPS = [
   },
 ];
 
-const SNIPPET = `{% if product.metafields.product_page_builder.page_blocks %}
+const SNIPPET = `{% if product.metafields.page_pro.page_blocks %}
   <div id="ppb-container"
        data-product-id="{{ product.id }}"
-       data-blocks="{{ product.metafields.product_page_builder.page_blocks | escape }}">
+       data-blocks="{{ product.metafields.page_pro.page_blocks | escape }}">
   </div>
   <link rel="stylesheet" href="{{ 'ppb.css' | asset_url }}">
   <script src="{{ 'ppb.js' | asset_url }}" defer></script>
@@ -51,7 +51,7 @@ export function OnboardingWizard() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-12">
       <div className="max-w-lg w-full text-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Bem-vindo ao Product Page Builder</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Bem-vindo ao Page Pro</h1>
         <p className="text-sm text-gray-500 mt-2">Siga os 3 passos abaixo para começar a melhorar a conversão das suas páginas de produto.</p>
       </div>
 

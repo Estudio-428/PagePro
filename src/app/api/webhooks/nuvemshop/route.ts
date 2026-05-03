@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { nuvemshopRequest, upsertProductMetafield, METAFIELD_NAMESPACE, METAFIELD_KEY } from '@/lib/nuvemshop/api-client';
 
+export const dynamic = 'force-dynamic';
+
 function verifyHmac(body: Buffer, signature: string): boolean {
   if (!signature) return false;
   const expected = createHmac('sha256', process.env.NUVEMSHOP_CLIENT_SECRET!)

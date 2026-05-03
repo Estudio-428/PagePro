@@ -1,11 +1,11 @@
 /**
- * Product Page Builder — Storefront Script
+ * Page Pro — Storefront Script
  * Versão: 1.0.0
  * 
  * Como usar no tema (adicionar em theme.liquid antes de </body>):
  *   <script src="https://seuapp.com/storefront/ppb.js" defer></script>
  *
- * O script lê o metafield "product_page_builder.page_blocks" do produto
+ * O script lê o metafield "page_pro.page_blocks" do produto
  * e injeta os blocos no container #ppb-container da página de produto.
  *
  * No tema, adicione onde quiser exibir os blocos:
@@ -14,7 +14,7 @@
 (function () {
   'use strict';
 
-  const PPB_METAFIELD_KEY = 'product_page_builder.page_blocks';
+  const PPB_METAFIELD_KEY = 'page_pro.page_blocks';
 
   // Ícones SVG inline para features (subset básico)
   const ICONS = {
@@ -329,13 +329,13 @@
     if (!productId) return;
 
     // Tenta ler o metafield via variável global do tema (método mais rápido)
-    // O tema pode expor: window.__ppb_blocks = {{ product.metafields.product_page_builder.page_blocks | json }};
+    // O tema pode expor: window.__ppb_blocks = {{ product.metafields.page_pro.page_blocks | json }};
     let blocksData = window.__ppb_blocks;
 
     if (!blocksData) {
       // Fallback: busca via API de storefront da Nuvemshop
       // Requer que o tema exponha o metafield no HTML ou via endpoint público
-      console.warn('[PPB] window.__ppb_blocks não definido. Adicione no tema: window.__ppb_blocks = {{ product.metafields.product_page_builder.page_blocks | json }};');
+      console.warn('[PPB] window.__ppb_blocks não definido. Adicione no tema: window.__ppb_blocks = {{ product.metafields.page_pro.page_blocks | json }};');
       return;
     }
 

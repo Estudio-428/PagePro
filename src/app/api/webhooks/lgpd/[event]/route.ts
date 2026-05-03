@@ -2,12 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createHmac, timingSafeEqual } from 'crypto';
 
+export const dynamic = 'force-dynamic';
+
 function verifyHmac(body: Buffer, signature: string): boolean {
+  if (!signature) return false;
   const expected = createHmac('sha256', process.env.NUVEMSHOP_CLIENT_SECRET!)
     .update(body)
-    .digest('base64');
+    .digest('hex');
   try {
-    return timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+    return timingSafeEqual(
+      Buffer.from(expected, 'hex'),
+      Buffer.from(signature, 'hex'),
+    );
   } catch {
     return false;
   }
@@ -31,13 +37,15 @@ export async function POST(
     switch (params.event) {
       case 'store-redact': {
         await prisma.$transaction([
-          prisma.block.deleteMany({
-            where: { productConfig: { storeId } },
-          }),
+          prisma.block.deleteMany({ where: { productConfig: { storeId } } }),
           prisma.productConfig.deleteMany({ where: { storeId } }),
+          prisma.productLink.deleteMany({ where: { storeId } }),
+          prisma.autoRule.deleteMany({ where: { storeId } }),
           prisma.template.deleteMany({ where: { storeId } }),
           prisma.importJob.deleteMany({ where: { storeId } }),
+          prisma.analyticsEvent.deleteMany({ where: { storeId } }),
           prisma.webhookEvent.deleteMany({ where: { storeId } }),
+          prisma.dataExportRequest.deleteMany({ where: { storeId } }),
           prisma.store.update({
             where: { storeId },
             data: { accessToken: null, redactedAt: new Date() },
@@ -47,8 +55,7 @@ export async function POST(
       }
 
       case 'customer-redact': {
-        // Este app não armazena dados de clientes diretamente
-        // Registrar para auditoria
+        // App não armazena dados pessoais de clientes
         await prisma.dataExportRequest.create({
           data: {
             storeId,
@@ -63,7 +70,6 @@ export async function POST(
 
       case 'data-request': {
         const customerId = payload.customer?.id ?? 0;
-        // Este app não armazena dados pessoais de clientes
         await prisma.dataExportRequest.create({
           data: {
             storeId,
