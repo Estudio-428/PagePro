@@ -14,18 +14,60 @@ interface BlockData {
   isVisible: boolean;
 }
 
-const BLOCK_TYPES: { type: BlockType; label: string; emoji: string }[] = [
-  { type: 'DESCRIPTION',  label: 'Descrição',      emoji: '📝' },
-  { type: 'FEATURES',     label: 'Características', emoji: '✅' },
-  { type: 'IMAGES',       label: 'Imagens',         emoji: '🖼️' },
-  { type: 'BADGES',       label: 'Selos',           emoji: '🏅' },
-  { type: 'TABLE',        label: 'Tabela',          emoji: '📊' },
-  { type: 'INFO_BOX',     label: 'Caixa info',      emoji: 'ℹ️' },
-  { type: 'SEO_TEXT',     label: 'Texto SEO',       emoji: '🔍' },
-  { type: 'VIDEO',        label: 'Vídeo',           emoji: '▶️' },
-  { type: 'FAQ',          label: 'FAQ',             emoji: '❓' },
-  { type: 'CUSTOM_HTML',  label: 'HTML livre',      emoji: '</>' },
+const BLOCK_TYPES: { type: BlockType; label: string; icon: string }[] = [
+  { type: 'DESCRIPTION',  label: 'Descrição',       icon: 'text' },
+  { type: 'FEATURES',     label: 'Características', icon: 'check' },
+  { type: 'IMAGES',       label: 'Imagens',         icon: 'image' },
+  { type: 'BADGES',       label: 'Selos',           icon: 'badge' },
+  { type: 'TABLE',        label: 'Tabela',          icon: 'table' },
+  { type: 'INFO_BOX',     label: 'Caixa info',      icon: 'info' },
+  { type: 'SEO_TEXT',     label: 'Texto SEO',       icon: 'search' },
+  { type: 'VIDEO',        label: 'Vídeo',           icon: 'play' },
+  { type: 'FAQ',          label: 'FAQ',             icon: 'help' },
+  { type: 'CUSTOM_HTML',  label: 'HTML livre',      icon: 'code' },
 ];
+
+function Icon({ name, className = 'h-4 w-4' }: { name: string; className?: string }) {
+  const common = {
+    className,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.8,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+  };
+
+  switch (name) {
+    case 'text':
+      return <svg {...common}><path d="M5 6h14M5 12h10M5 18h7" /></svg>;
+    case 'check':
+      return <svg {...common}><path d="M20 6 9 17l-5-5" /></svg>;
+    case 'image':
+      return <svg {...common}><rect x="4" y="5" width="16" height="14" rx="2" /><path d="m8 15 3-3 3 3 2-2 4 4" /><circle cx="9" cy="9" r="1" /></svg>;
+    case 'badge':
+      return <svg {...common}><path d="M12 3 9.7 7.7 4.5 8.5l3.8 3.7-.9 5.3L12 15l4.6 2.5-.9-5.3 3.8-3.7-5.2-.8L12 3Z" /></svg>;
+    case 'table':
+      return <svg {...common}><rect x="4" y="5" width="16" height="14" rx="2" /><path d="M4 11h16M10 5v14" /></svg>;
+    case 'info':
+      return <svg {...common}><circle cx="12" cy="12" r="8" /><path d="M12 16v-4M12 8h.01" /></svg>;
+    case 'search':
+      return <svg {...common}><circle cx="11" cy="11" r="6" /><path d="m16 16 4 4" /></svg>;
+    case 'play':
+      return <svg {...common}><path d="m9 7 8 5-8 5V7Z" /></svg>;
+    case 'help':
+      return <svg {...common}><circle cx="12" cy="12" r="8" /><path d="M9.8 9a2.3 2.3 0 1 1 3.4 2c-.8.5-1.2 1-1.2 2M12 17h.01" /></svg>;
+    case 'code':
+      return <svg {...common}><path d="m8 9-4 3 4 3M16 9l4 3-4 3M14 5l-4 14" /></svg>;
+    case 'box':
+      return <svg {...common}><path d="M12 3 4 7l8 4 8-4-8-4Z" /><path d="M4 7v10l8 4 8-4V7M12 11v10" /></svg>;
+    case 'settings':
+      return <svg {...common}><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z" /><path d="M3 12h2M19 12h2M12 3v2M12 19v2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4" /></svg>;
+    default:
+      return <svg {...common}><circle cx="12" cy="12" r="8" /></svg>;
+  }
+}
 
 function defaultContent(type: BlockType): Record<string, unknown> {
   switch (type) {
@@ -97,7 +139,7 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
             onClick={() => addBlock(bt.type)}
             className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2"
           >
-            <span>{bt.emoji}</span>
+            <Icon name={bt.icon} />
             <span>{bt.label}</span>
           </button>
         ))}
@@ -108,7 +150,7 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
         <p className="text-xs font-semibold text-gray-400 uppercase mb-3">Ordem dos blocos ({blocks.length})</p>
         {blocks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-            <p className="text-4xl mb-3">📦</p>
+            <Icon name="box" className="h-10 w-10 mb-3" />
             <p className="text-sm">Clique em um bloco à esquerda para adicionar</p>
           </div>
         ) : (
@@ -123,7 +165,7 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
                     selectedIdx === idx ? 'border-blue-500 shadow-sm' : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <span>{bt?.emoji}</span>
+                  <span className="text-blue-700"><Icon name={bt?.icon ?? 'text'} /></span>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{block.title || bt?.label}</p>
                     <p className="text-xs text-gray-400">{bt?.label} · {block.effect}</p>
@@ -149,7 +191,7 @@ export function BlockEditor({ blocks, onChange }: BlockEditorProps) {
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-full py-12 text-gray-400">
-            <p className="text-3xl mb-2">🎛️</p>
+            <Icon name="settings" className="h-8 w-8 mb-2" />
             <p className="text-sm text-center px-6">Selecione um bloco para configurar</p>
           </div>
         )}

@@ -32,7 +32,9 @@ export interface FeaturesContent {
 }
 
 export interface ImageItem {
-  url: string;
+  url?: string;
+  desktopUrl?: string;
+  mobileUrl?: string;
   alt?: string;
   caption?: string;
 }
@@ -46,6 +48,8 @@ export interface Badge {
   icon?: string;
   color?: string;  // hex ou nome
   imageUrl?: string;
+  imageDesktopUrl?: string;
+  imageMobileUrl?: string;
 }
 export interface BadgesContent {
   items: Badge[];

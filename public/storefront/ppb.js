@@ -50,10 +50,14 @@
     IMAGES({ content }) {
       const layout = content.layout || 'grid';
       const items = (content.items || [])
-        .map(img => `<div class="ppb-image-item">
-          <img src="${escapeAttr(img.url)}" alt="${escapeAttr(img.alt || '')}" loading="lazy">
+        .map(img => {
+          const image = responsiveImage(img, 'ppb-image', img.alt || '');
+          if (!image) return '';
+          return `<div class="ppb-image-item">
+          ${image}
           ${img.caption ? `<p class="ppb-image-caption">${escapeHtml(img.caption)}</p>` : ''}
-        </div>`)
+        </div>`;
+        })
         .join('');
       return `<div class="ppb-images ppb-images-${layout}">${items}</div>`;
     },
@@ -61,10 +65,18 @@
     BADGES({ content }) {
       const layout = content.layout || 'row';
       const items = (content.items || [])
-        .map(badge => `<div class="ppb-badge" ${badge.color ? `style="--ppb-badge-color:${escapeAttr(badge.color)}"` : ''}>
-          ${badge.imageUrl ? `<img src="${escapeAttr(badge.imageUrl)}" alt="${escapeAttr(badge.label)}">` : ''}
+        .map(badge => {
+          const image = responsiveImage({
+            desktopUrl: badge.imageDesktopUrl || badge.imageUrl,
+            mobileUrl: badge.imageMobileUrl,
+            url: badge.imageUrl,
+          }, 'ppb-badge-image', badge.label || '');
+          const icon = !image && badge.icon ? `<span class="ppb-badge-icon">${getIcon(badge.icon)}</span>` : '';
+          return `<div class="ppb-badge" ${badge.color ? `style="--ppb-badge-color:${escapeAttr(badge.color)}"` : ''}>
+          ${image || icon}
           <span>${escapeHtml(badge.label)}</span>
-        </div>`)
+        </div>`;
+        })
         .join('');
       return `<div class="ppb-badges ppb-badges-${layout}">${items}</div>`;
     },
@@ -302,6 +314,19 @@
 
   function escapeAttr(str) {
     return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function responsiveImage(item, className, alt) {
+    const desktopUrl = item.desktopUrl || item.url || item.imageDesktopUrl || item.imageUrl;
+    const mobileUrl = item.mobileUrl || item.imageMobileUrl;
+    if (!desktopUrl && !mobileUrl) return '';
+
+    const fallback = desktopUrl || mobileUrl;
+    const source = mobileUrl
+      ? `<source media="(max-width: 640px)" srcset="${escapeAttr(mobileUrl)}">`
+      : '';
+
+    return `<picture class="${className}-picture">${source}<img class="${className}" src="${escapeAttr(fallback)}" alt="${escapeAttr(alt || '')}" loading="lazy"></picture>`;
   }
 
   function getVideoEmbedUrl(url) {

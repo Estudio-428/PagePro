@@ -117,6 +117,25 @@ function BlockPreview({ block }: { block: BlockData }) {
       );
     }
 
+    case 'IMAGES':
+      return (
+        <div style={s}>
+          {block.title && <h3 style={{ fontWeight: 600, marginBottom: 16 }}>{block.title}</h3>}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+            {((c.items as { desktopUrl?: string; mobileUrl?: string; url?: string; alt?: string; caption?: string }[]) ?? []).map((item, i) => {
+              const src = item.desktopUrl || item.url || item.mobileUrl;
+              if (!src) return null;
+              return (
+                <figure key={i} style={{ margin: 0 }}>
+                  <img src={src} alt={item.alt ?? ''} style={{ width: '100%', borderRadius: 4, border: '1px solid #eee' }} />
+                  {item.caption && <figcaption style={{ color: '#777', fontSize: 12, marginTop: 6 }}>{item.caption}</figcaption>}
+                </figure>
+              );
+            })}
+          </div>
+        </div>
+      );
+
     case 'INFO_BOX': {
       const styles: Record<string, { bg: string; color: string }> = {
         info:    { bg: '#eef4ff', color: '#2a4db5' },
@@ -130,17 +149,48 @@ function BlockPreview({ block }: { block: BlockData }) {
 
     case 'BADGES':
       return (
-        <div style={{ ...s, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {((c.items as { label: string; icon?: string; color?: string }[]) ?? []).map((badge, i) => (
-            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 12px', borderRadius: 20, fontSize: 13, background: `${badge.color ?? '#3d5cff'}18`, color: badge.color ?? '#3d5cff', border: `1px solid ${badge.color ?? '#3d5cff'}40` }}>
-              {badge.icon && <span>{badge.icon}</span>}{badge.label}
+        <div style={{ ...s, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+          {((c.items as { label: string; icon?: string; color?: string; imageUrl?: string; imageDesktopUrl?: string; imageMobileUrl?: string }[]) ?? []).map((badge, i) => {
+            const color = badge.color ?? '#2f80b8';
+            const src = badge.imageDesktopUrl || badge.imageUrl || badge.imageMobileUrl;
+            return (
+            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 4, fontSize: 13, background: '#fff', color, border: `1px solid ${color}40` }}>
+              {src ? <img src={src} alt="" style={{ width: 28, height: 28, objectFit: 'contain' }} /> : <StorefrontIcon name={badge.icon ?? 'check'} />}
+              {badge.label}
             </span>
-          ))}
+          );})}
         </div>
       );
 
     default:
       return <div style={s}><em style={{ color: '#999', fontSize: 13 }}>{block.type}</em></div>;
+  }
+}
+
+function StorefrontIcon({ name }: { name: string }) {
+  const common = {
+    width: 18,
+    height: 18,
+    viewBox: '0 0 16 16',
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 1.7,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+    'aria-hidden': true,
+  };
+
+  switch (name) {
+    case 'star':
+      return <svg {...common} fill="currentColor" stroke="none"><path d="M8 1.6 9.9 5.4l4.2.6-3 2.9.7 4.1L8 11l-3.8 2 .7-4.1-3-2.9 4.2-.6L8 1.6Z" /></svg>;
+    case 'shield':
+      return <svg {...common}><path d="M8 1.8 3.2 3.9v3.8c0 3 2.1 5.4 4.8 6.5 2.7-1.1 4.8-3.5 4.8-6.5V3.9L8 1.8Z" /></svg>;
+    case 'truck':
+      return <svg {...common}><path d="M1.5 4.5h8v6h-8zM9.5 6.5h2.7l1.3 2v2h-4z" /><path d="M4 12a1.2 1.2 0 1 0 0-2.4A1.2 1.2 0 0 0 4 12ZM11.5 12a1.2 1.2 0 1 0 0-2.4 1.2 1.2 0 0 0 0 2.4Z" /></svg>;
+    case 'info':
+      return <svg {...common}><circle cx="8" cy="8" r="6" /><path d="M8 7.5v4M8 4.8h.01" /></svg>;
+    default:
+      return <svg {...common}><path d="M3 8.2 6.4 11.5 13 4.8" /></svg>;
   }
 }
 

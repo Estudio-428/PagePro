@@ -33,7 +33,11 @@
   align-items: center;
   gap: .5rem;
 }
-.ppb-feature-icon { flex-shrink: 0; display: flex; }
+.ppb-feature-icon {
+  flex-shrink: 0;
+  display: flex;
+  color: var(--ppb-accent, #2f80b8);
+}
 
 /* === Imagens === */
 .ppb-images-grid {
@@ -41,7 +45,11 @@
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: .75rem;
 }
-.ppb-image-item img { width: 100%; border-radius: 6px; }
+.ppb-image-item img {
+  width: 100%;
+  display: block;
+  border-radius: 4px;
+}
 .ppb-image-caption { font-size: .8rem; color: #666; margin: .25rem 0 0; }
 
 /* === Selos === */
@@ -50,16 +58,38 @@
   flex-wrap: wrap;
   gap: .75rem;
 }
-.ppb-badges-grid { flex-direction: row; }
+.ppb-badges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+}
 .ppb-badge {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: .25rem;
-  font-size: .8rem;
-  text-align: center;
+  gap: .5rem;
+  padding: .625rem .75rem;
+  border: 1px solid color-mix(in srgb, var(--ppb-badge-color, #2f80b8) 24%, transparent);
+  border-radius: 4px;
+  color: var(--ppb-badge-color, #2f80b8);
+  background: color-mix(in srgb, var(--ppb-badge-color, #2f80b8) 7%, white);
+  font-size: .85rem;
+  line-height: 1.3;
+  text-align: left;
 }
-.ppb-badge img { width: 48px; height: 48px; object-fit: contain; }
+.ppb-badge-icon,
+.ppb-badge-image-picture {
+  flex-shrink: 0;
+  display: flex;
+}
+.ppb-badge-icon svg {
+  width: 18px;
+  height: 18px;
+}
+.ppb-badge img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
 
 /* === Tabela === */
 .ppb-table-wrapper { overflow-x: auto; }
