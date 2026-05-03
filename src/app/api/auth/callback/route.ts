@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { encrypt } from '@/lib/crypto';
 import { getSession } from '@/lib/auth/session';
 import { nuvemshopRequest } from '@/lib/nuvemshop/api-client';
+import { DEFAULT_PUBLIC_APP_URL } from '@/lib/config/app';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,13 @@ function getAppBaseUrl(request: NextRequest): string {
     return configured.replace(/\/$/, '');
   }
 
-  return new URL(request.url).origin;
+  const forwardedHost = request.headers.get('x-forwarded-host') ?? request.headers.get('host');
+  if (forwardedHost && !forwardedHost.includes('localhost') && !forwardedHost.includes('127.0.0.1')) {
+    const proto = request.headers.get('x-forwarded-proto') ?? 'https';
+    return `${proto}://${forwardedHost}`.replace(/\/$/, '');
+  }
+
+  return DEFAULT_PUBLIC_APP_URL;
 }
 
 async function registerWebhooks(storeId: number, appBaseUrl: string) {

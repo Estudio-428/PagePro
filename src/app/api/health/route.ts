@@ -12,6 +12,7 @@ export async function GET() {
       db: 'connected',
       config: {
         appUrl: Boolean(process.env.NEXT_PUBLIC_APP_URL),
+        appUrlIsLocalhost: Boolean(process.env.NEXT_PUBLIC_APP_URL?.includes('localhost')),
         publicAppId: Boolean(NUVEMSHOP_APP_ID),
         publicAppIdFromEnv: Boolean(process.env.NEXT_PUBLIC_APP_ID),
         redirectUri: Boolean(process.env.NUVEMSHOP_REDIRECT_URI),
