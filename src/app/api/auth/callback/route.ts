@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
   const storeId = searchParams.get('store_id');
   const appBaseUrl = getAppBaseUrl(request);
 
-  if (!code || !storeId) {
+  if (!code) {
     return NextResponse.redirect(
       new URL('/auth/error?reason=missing_params', appBaseUrl)
     );
@@ -83,10 +83,16 @@ export async function GET(request: NextRequest) {
 
     const { access_token, scope, user_id } = await tokenRes.json();
     const numericStoreId = Number(user_id);
-    const callbackStoreId = Number(storeId);
 
-    if (!Number.isInteger(numericStoreId) || numericStoreId !== callbackStoreId) {
-      throw new Error('OAuth store mismatch');
+    if (!Number.isInteger(numericStoreId)) {
+      throw new Error('Invalid OAuth store id');
+    }
+
+    if (storeId) {
+      const callbackStoreId = Number(storeId);
+      if (!Number.isInteger(callbackStoreId) || numericStoreId !== callbackStoreId) {
+        throw new Error('OAuth store mismatch');
+      }
     }
 
     await prisma.store.upsert({
