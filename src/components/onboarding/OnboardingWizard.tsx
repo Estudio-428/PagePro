@@ -24,6 +24,7 @@ const STEPS = [
 const SNIPPET = `{% if product.metafields.page_pro.page_blocks %}
   <div id="ppb-container"
        data-product-id="{{ product.id }}"
+       data-store-id="{{ store.id }}"
        data-blocks="{{ product.metafields.page_pro.page_blocks | escape }}">
   </div>
   <link rel="stylesheet" href="{{ 'ppb.css' | asset_url }}">

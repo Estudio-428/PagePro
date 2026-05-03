@@ -319,6 +319,28 @@
     return null;
   }
 
+  // ---- Analytics ----
+
+  const APP_URL = (function () {
+    const scripts = document.querySelectorAll('script[src*="ppb.js"]');
+    if (scripts.length) {
+      try { return new URL(scripts[scripts.length - 1].src).origin; } catch {}
+    }
+    return '';
+  })();
+
+  function sendEvent(storeId, productId, eventType, metadata) {
+    if (!APP_URL || !storeId) return;
+    try {
+      fetch(APP_URL + '/api/analytics/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: JSON.stringify({ storeId, productId: Number(productId), eventType, metadata }),
+      }).catch(function () {});
+    } catch {}
+  }
+
   // ---- Bootstrap ----
 
   async function init() {
@@ -328,14 +350,18 @@
     const productId = container.dataset.productId;
     if (!productId) return;
 
-    // Tenta ler o metafield via variável global do tema (método mais rápido)
-    // O tema pode expor: window.__ppb_blocks = {{ product.metafields.page_pro.page_blocks | json }};
-    let blocksData = window.__ppb_blocks;
+    const storeId = container.dataset.storeId || window.__ppb_store_id;
+
+    // Priority 1: data-blocks attribute (server-side rendered by the theme)
+    let blocksData = container.dataset.blocks;
+
+    // Priority 2: window.__ppb_blocks variable set by theme
+    if (!blocksData) {
+      blocksData = window.__ppb_blocks;
+    }
 
     if (!blocksData) {
-      // Fallback: busca via API de storefront da Nuvemshop
-      // Requer que o tema exponha o metafield no HTML ou via endpoint público
-      console.warn('[PPB] window.__ppb_blocks não definido. Adicione no tema: window.__ppb_blocks = {{ product.metafields.page_pro.page_blocks | json }};');
+      console.warn('[PPB] Blocks not found. In theme add: window.__ppb_blocks = {{ product.metafields.page_pro.page_blocks | json }};');
       return;
     }
 
@@ -343,6 +369,7 @@
       const data = typeof blocksData === 'string' ? JSON.parse(blocksData) : blocksData;
       if (data?.blocks?.length > 0) {
         renderBlocks(data.blocks, container);
+        sendEvent(storeId, productId, 'page_view', { templateId: data.templateId ?? null });
       }
     } catch (e) {
       console.error('[PPB] Erro ao parsear blocos:', e);
