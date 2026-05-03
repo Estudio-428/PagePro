@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
 
   if (!code || !storeId) {
     return NextResponse.redirect(
-      new URL('/auth/error?reason=missing_params', request.url)
+      new URL('/auth/error?reason=missing_params', appBaseUrl)
     );
   }
 
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('OAuth callback error:', error);
     return NextResponse.redirect(
-      new URL('/auth/error?reason=oauth_failed', request.url)
+      new URL('/auth/error?reason=oauth_failed', appBaseUrl)
     );
   }
 }
