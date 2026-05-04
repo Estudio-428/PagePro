@@ -22,10 +22,9 @@ interface AppShellProps {
 }
 
 const navItems = [
-  { href: '/dashboard', label: 'Analytics', icon: 'chart' },
   { href: '/products', label: 'Produtos', icon: 'box' },
+  { href: '/dashboard', label: 'Analytics', icon: 'chart' },
   { href: '/import', label: 'Importar', icon: 'upload' },
-  { href: '/settings', label: 'Configurações', icon: 'settings' },
 ];
 
 function Icon({ name, className = 'h-4 w-4' }: { name: string; className?: string }) {
@@ -90,7 +89,7 @@ export function AppShell({
   return (
     <div className="grid min-h-screen grid-cols-[248px_1fr] bg-[var(--background)] text-[var(--foreground)]">
       <aside className="flex min-h-screen flex-col border-r border-[var(--sidebar-line)] bg-[var(--sidebar)] text-[#e2e3ea]">
-        <Link href="/dashboard" className="flex items-center gap-3 border-b border-[var(--sidebar-line)] px-5 py-4">
+        <Link href="/products" className="flex items-center gap-3 border-b border-[var(--sidebar-line)] px-5 py-4">
           <span className="grid h-8 w-8 place-items-center rounded-[9px] bg-[var(--pink)] font-display text-[13px] font-extrabold text-white">PP</span>
           <span className="flex flex-col leading-tight">
             <b className="font-display text-[15px] text-white">Page Pro</b>
@@ -123,11 +122,11 @@ export function AppShell({
         <div className="mt-auto border-t border-[var(--sidebar-line)] p-4">
           <div className="mb-3 flex items-center gap-3 rounded-[10px] bg-[var(--sidebar-2)] p-3">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-[rgba(230,0,77,.16)] text-[var(--pink-50)]">
-              <Icon name="help" />
+              <Icon name="spark" />
             </span>
             <span>
-              <span className="block text-[13px] font-bold text-white">Guia rápido</span>
-              <span className="text-[11.5px] text-[#8a8d9a]">Instale o snippet no tema</span>
+              <span className="block text-[13px] font-bold text-white">Editor de produtos</span>
+              <span className="text-[11.5px] text-[#8a8d9a]">Blocos por produto</span>
             </span>
           </div>
           <div className="flex items-center gap-3 px-2 py-1">
