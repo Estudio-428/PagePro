@@ -1,7 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { fetchWithNexoAuth } from '@/lib/nexo/client';
 
 type ShellAction = {
   label: string;
@@ -26,6 +28,13 @@ const navItems = [
   { href: '/dashboard', label: 'Analytics', icon: 'chart' },
   { href: '/import', label: 'Importar', icon: 'upload' },
 ];
+
+type StoreContext = {
+  id: number;
+  name: string;
+  domain?: string;
+  logo?: string | null;
+};
 
 function Icon({ name, className = 'h-4 w-4' }: { name: string; className?: string }) {
   const common = {
@@ -52,6 +61,10 @@ function Icon({ name, className = 'h-4 w-4' }: { name: string; className?: strin
       return <svg {...common}><path d="M12 3 13.8 8.2 19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" /></svg>;
     case 'help':
       return <svg {...common}><circle cx="12" cy="12" r="8" /><path d="M9.8 9a2.3 2.3 0 1 1 3.4 2c-.8.5-1.2 1-1.2 2M12 17h.01" /></svg>;
+    case 'chevrons-left':
+      return <svg {...common}><path d="m11 17-5-5 5-5M18 17l-5-5 5-5" /></svg>;
+    case 'chevrons-right':
+      return <svg {...common}><path d="m13 17 5-5-5-5M6 17l5-5-5-5" /></svg>;
     default:
       return <svg {...common}><circle cx="12" cy="12" r="8" /></svg>;
   }
@@ -85,20 +98,66 @@ export function AppShell({
   showPageHeader = true,
 }: AppShellProps) {
   const pathname = usePathname();
+  const [store, setStore] = useState<StoreContext | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem('page-pro-sidebar-collapsed');
+    if (saved) setCollapsed(saved === 'true');
+  }, []);
+
+  useEffect(() => {
+    let alive = true;
+    fetchWithNexoAuth('/api/store')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (alive && data?.store) setStore(data.store);
+      })
+      .catch(() => {});
+
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((current) => {
+      const next = !current;
+      window.localStorage.setItem('page-pro-sidebar-collapsed', String(next));
+      return next;
+    });
+  }
+
+  const storeName = store?.name ?? 'Loja conectada';
+  const storeDomain = store?.domain ?? (store?.id ? `ID ${store.id}` : 'Ambiente do app');
+  const shellCols = collapsed ? 'grid-cols-[72px_1fr]' : 'grid-cols-[248px_1fr]';
 
   return (
-    <div className="grid min-h-screen grid-cols-[248px_1fr] bg-[var(--background)] text-[var(--foreground)]">
+    <div className={`grid min-h-screen ${shellCols} bg-[var(--background)] text-[var(--foreground)] transition-[grid-template-columns] duration-200`}>
       <aside className="flex min-h-screen flex-col border-r border-[var(--sidebar-line)] bg-[var(--sidebar)] text-[#e2e3ea]">
-        <Link href="/products" className="flex items-center gap-3 border-b border-[var(--sidebar-line)] px-5 py-4">
-          <span className="grid h-8 w-8 place-items-center rounded-[9px] bg-[var(--pink)] font-display text-[13px] font-extrabold text-white">PP</span>
-          <span className="flex flex-col leading-tight">
-            <b className="font-display text-[15px] text-white">Page Pro</b>
-            <span className="text-[11px] uppercase tracking-[0.16em] text-[#8a8d9a]">Nuvemshop</span>
-          </span>
-        </Link>
+        <div className={`flex items-center border-b border-[var(--sidebar-line)] ${collapsed ? 'justify-center gap-1 px-1 py-4' : 'justify-between px-5 py-4'}`}>
+          <Link href="/products" className="flex min-w-0 items-center gap-3" title="Page Pro">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[9px] bg-[var(--pink)] font-display text-[13px] font-extrabold text-white">PP</span>
+            {!collapsed && (
+              <span className="flex min-w-0 flex-col leading-tight">
+                <b className="font-display text-[15px] text-white">Page Pro</b>
+                <span className="text-[11px] uppercase tracking-[0.16em] text-[#8a8d9a]">Nuvemshop</span>
+              </span>
+            )}
+          </Link>
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className={`${collapsed ? 'h-7 w-7' : 'h-8 w-8'} grid place-items-center rounded-lg border border-[var(--sidebar-line)] text-[#8a8d9a] transition hover:border-[#3a3d4b] hover:bg-[var(--sidebar-2)] hover:text-white`}
+            aria-label={collapsed ? 'Expandir menu' : 'Minimizar menu'}
+            title={collapsed ? 'Expandir menu' : 'Minimizar menu'}
+          >
+            <Icon name={collapsed ? 'chevrons-right' : 'chevrons-left'} className="h-4 w-4" />
+          </button>
+        </div>
 
-        <div className="px-3 py-5">
-          <p className="px-3 pb-2 text-[10.5px] font-bold uppercase tracking-[0.16em] text-[#5a5d6a]">Operação</p>
+        <div className={`${collapsed ? 'px-2 py-4' : 'px-3 py-5'}`}>
+          {!collapsed && <p className="px-3 pb-2 text-[10.5px] font-bold uppercase tracking-[0.16em] text-[#5a5d6a]">Operação</p>}
           <nav className="space-y-1">
             {navItems.map((item) => {
               const active = pathname === item.href || pathname?.startsWith(`${item.href}/`);
@@ -106,35 +165,42 @@ export function AppShell({
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13.5px] font-semibold transition ${
+                  title={collapsed ? item.label : undefined}
+                  className={`relative flex items-center rounded-lg py-2.5 text-[13.5px] font-semibold transition ${collapsed ? 'justify-center px-0' : 'gap-3 px-3'} ${
                     active ? 'bg-[var(--sidebar-2)] text-white' : 'text-[#c2c5d2] hover:bg-[var(--sidebar-2)] hover:text-white'
                   }`}
                 >
                   {active && <span className="absolute -left-3 h-5 w-[3px] rounded-r bg-[var(--pink)]" />}
                   <Icon name={item.icon} />
-                  <span>{item.label}</span>
+                  {!collapsed && <span>{item.label}</span>}
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        <div className="mt-auto border-t border-[var(--sidebar-line)] p-4">
-          <div className="mb-3 flex items-center gap-3 rounded-[10px] bg-[var(--sidebar-2)] p-3">
+        <div className={`mt-auto border-t border-[var(--sidebar-line)] ${collapsed ? 'p-2' : 'p-4'}`}>
+          <div className={`mb-3 flex items-center rounded-[10px] bg-[var(--sidebar-2)] p-3 ${collapsed ? 'justify-center' : 'gap-3'}`} title="Editor de produtos">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-[rgba(230,0,77,.16)] text-[var(--pink-50)]">
               <Icon name="spark" />
             </span>
-            <span>
-              <span className="block text-[13px] font-bold text-white">Editor de produtos</span>
-              <span className="text-[11.5px] text-[#8a8d9a]">Blocos por produto</span>
-            </span>
+            {!collapsed && (
+              <span>
+                <span className="block text-[13px] font-bold text-white">Editor de produtos</span>
+                <span className="text-[11.5px] text-[#8a8d9a]">Blocos por produto</span>
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-3 px-2 py-1">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-[#ff8fa3] to-[var(--pink)] text-xs font-bold text-white">PP</span>
-            <span>
-              <span className="block text-[13px] font-bold text-white">Loja conectada</span>
-              <span className="text-[11px] text-[#8a8d9a]">Ambiente do app</span>
+          <div className={`flex items-center px-2 py-1 ${collapsed ? 'justify-center' : 'gap-3'}`} title={`${storeName} · ${storeDomain}`}>
+            <span className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-[#ff8fa3] to-[var(--pink)] text-xs font-bold text-white">
+              {store?.logo ? <img src={store.logo} alt="" className="h-full w-full object-cover" /> : storeName.slice(0, 2).toUpperCase()}
             </span>
+            {!collapsed && (
+              <span className="min-w-0">
+                <span className="block truncate text-[13px] font-bold text-white">{storeName}</span>
+                <span className="block truncate text-[11px] text-[#8a8d9a]">{storeDomain}</span>
+              </span>
+            )}
           </div>
         </div>
       </aside>
