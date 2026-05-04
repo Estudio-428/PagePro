@@ -31,14 +31,22 @@ function EditorContent() {
   const [productLoading, setProductLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [authError, setAuthError] = useState(false);
+  const [saveWarning, setSaveWarning] = useState<string | null>(null);
 
   useEffect(() => {
     if (!productId) return;
     setLoading(true);
     fetchWithNexoAuth(`/api/blocks?productId=${productId}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (r.status === 401) {
+          setAuthError(true);
+          return null;
+        }
+        return r.json();
+      })
       .then((d) => {
-        if (d.config?.blocks) setBlocks(d.config.blocks);
+        if (d?.config?.blocks) setBlocks(d.config.blocks);
       })
       .finally(() => setLoading(false));
   }, [productId]);
@@ -71,13 +79,27 @@ function EditorContent() {
 
   async function handleSave() {
     setSaving(true);
+    setSaveWarning(null);
     try {
       const res = await fetchWithNexoAuth('/api/blocks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId, productName: localizedProductName, productHandle, blocks }),
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      if (res.status === 401) {
+        setAuthError(true);
+        alert('Sessão não autenticada. Abra o Page Pro pelo painel admin da Nuvemshop para salvar.');
+        return;
+      }
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
+
+      if (data.warning) {
+        setSaveWarning(data.warning);
+      }
+
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (e) {
@@ -116,6 +138,18 @@ function EditorContent() {
         </div>
         {saved && <span className="rounded-full bg-[var(--green-50)] px-3 py-1 text-xs font-bold text-[var(--green)]">Publicado</span>}
       </div>
+
+      {authError && (
+        <div className="border-b border-[var(--amber)] bg-[var(--amber-50)] px-5 py-3 text-sm font-semibold text-[#7a5200]">
+          Sessão local sem autenticação. Para carregar dados reais e salvar, abra o Page Pro pelo painel admin da Nuvemshop.
+        </div>
+      )}
+
+      {saveWarning && (
+        <div className="border-b border-[var(--amber)] bg-[var(--amber-50)] px-5 py-3 text-sm font-semibold text-[#7a5200]">
+          {saveWarning}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex flex-1 items-center justify-center text-[var(--muted)]">Carregando...</div>

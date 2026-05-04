@@ -90,22 +90,43 @@ export async function POST(request: NextRequest) {
       orderBy: { order: 'asc' },
     });
 
-    // Serializa para o storefront e salva no metafield
+    // Serializa para o storefront e tenta manter o metafield em sincronia.
+    // A vitrine nova lê os blocos direto da API pública do Page Pro, então
+    // falha de escopo/metafield não deve bloquear o salvamento principal.
     const storefrontJson = serializeBlocksForStorefront(savedBlocks);
-    const metafield = await upsertProductMetafield(
-      storeId,
-      productId,
-      storefrontJson,
-      config.metafieldId ?? undefined
-    );
+    let metafieldId = config.metafieldId ?? null;
+    let metafieldSynced = false;
+    let metafieldError: string | null = null;
 
-    // Salva o metafieldId para futuras atualizações
-    await prisma.productConfig.update({
-      where: { id: config.id },
-      data: { metafieldId: metafield.id },
+    try {
+      const metafield = await upsertProductMetafield(
+        storeId,
+        productId,
+        storefrontJson,
+        config.metafieldId ?? undefined
+      );
+
+      metafieldId = metafield.id;
+      metafieldSynced = true;
+
+      // Salva o metafieldId para futuras atualizações
+      await prisma.productConfig.update({
+        where: { id: config.id },
+        data: { metafieldId: metafield.id },
+      });
+    } catch (error) {
+      metafieldError = error instanceof Error ? error.message : 'Erro ao sincronizar metafield';
+      console.warn('POST /api/blocks metafield sync warning:', metafieldError);
+    }
+
+    return NextResponse.json({
+      success: true,
+      configId: config.id,
+      metafieldId,
+      metafieldSynced,
+      warning: metafieldSynced ? null : 'Blocos salvos no Page Pro, mas o metafield da Nuvemshop não foi sincronizado.',
+      metafieldError,
     });
-
-    return NextResponse.json({ success: true, configId: config.id, metafieldId: metafield.id });
   } catch (error: unknown) {
     if ((error as Error).message === 'UNAUTHORIZED') {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
