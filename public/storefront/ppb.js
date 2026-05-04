@@ -14,7 +14,7 @@
 (function () {
   'use strict';
 
-  const PPB_METAFIELD_KEY = 'page_pro.page_blocks';
+  const DEFAULT_APP_URL = 'https://nvapp428-production.up.railway.app';
 
   // Ícones SVG inline para features (subset básico)
   const ICONS = {
@@ -346,12 +346,19 @@
 
   // ---- Analytics ----
 
+  const CURRENT_SCRIPT = document.currentScript || (function () {
+    const scripts = document.getElementsByTagName('script');
+    return scripts[scripts.length - 1] || null;
+  })();
+
   const APP_URL = (function () {
-    const scripts = document.querySelectorAll('script[src*="ppb.js"]');
-    if (scripts.length) {
-      try { return new URL(scripts[scripts.length - 1].src).origin; } catch {}
+    if (CURRENT_SCRIPT && CURRENT_SCRIPT.src) {
+      try {
+        const origin = new URL(CURRENT_SCRIPT.src).origin;
+        if (!origin.includes('apps-scripts.tiendanube.com')) return origin;
+      } catch {}
     }
-    return '';
+    return DEFAULT_APP_URL;
   })();
 
   function sendEvent(storeId, productId, eventType, metadata) {
@@ -368,14 +375,87 @@
 
   // ---- Bootstrap ----
 
+  function getStoreId(container) {
+    if (container?.dataset.storeId) return container.dataset.storeId;
+
+    if (CURRENT_SCRIPT?.src) {
+      try {
+        const url = new URL(CURRENT_SCRIPT.src);
+        const store = url.searchParams.get('store') || url.searchParams.get('storeId');
+        if (store) return store;
+      } catch {}
+    }
+
+    return window.__ppb_store_id || window.LS?.store?.id || '';
+  }
+
+  function getProductId(container) {
+    return container?.dataset.productId || window.LS?.product?.id || '';
+  }
+
+  function findInsertionPoint() {
+    return document.querySelector('[data-store="product-description"]')
+      || document.querySelector('.js-product-description')
+      || document.querySelector('.product-description')
+      || document.querySelector('#product-description')
+      || document.querySelector('.js-product-detail')
+      || document.querySelector('.product-detail')
+      || document.querySelector('.product-single')
+      || document.querySelector('.js-product-container')
+      || document.querySelector('[data-component="product"]')
+      || document.querySelector('main')
+      || document.body;
+  }
+
+  function ensureContainer() {
+    let container = document.getElementById('ppb-container');
+    if (container) return container;
+
+    container = document.createElement('div');
+    container.id = 'ppb-container';
+    container.setAttribute('data-page-pro-auto', 'true');
+
+    const target = findInsertionPoint();
+    if (target && target !== document.body) {
+      target.insertAdjacentElement('afterend', container);
+    } else {
+      document.body.appendChild(container);
+    }
+
+    return container;
+  }
+
+  function ensureStylesheet() {
+    if (!APP_URL || document.querySelector('link[data-page-pro-css]')) return;
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = APP_URL + '/storefront/ppb.css';
+    link.setAttribute('data-page-pro-css', 'true');
+    document.head.appendChild(link);
+  }
+
+  async function fetchBlocks(storeId, productId) {
+    if (!APP_URL || !storeId || !productId) return null;
+
+    const url = `${APP_URL}/api/storefront/blocks?storeId=${encodeURIComponent(storeId)}&productId=${encodeURIComponent(productId)}`;
+    const response = await fetch(url, { credentials: 'omit', mode: 'cors' });
+    if (!response.ok) return null;
+    return response.json();
+  }
+
   async function init() {
-    const container = document.getElementById('ppb-container');
-    if (!container) return;
+    const hasThemeContainer = Boolean(document.getElementById('ppb-container'));
+    const productIdFromLs = window.LS?.product?.id;
+    if (!hasThemeContainer && !productIdFromLs) return;
 
+    const container = ensureContainer();
     const productId = container.dataset.productId;
-    if (!productId) return;
+    if (!productId && productIdFromLs) container.dataset.productId = String(productIdFromLs);
 
-    const storeId = container.dataset.storeId || window.__ppb_store_id;
+    const productIdResolved = getProductId(container);
+    const storeId = getStoreId(container);
+    if (!productIdResolved || !storeId) return;
 
     // Priority 1: data-blocks attribute (server-side rendered by the theme)
     let blocksData = container.dataset.blocks;
@@ -386,15 +466,17 @@
     }
 
     if (!blocksData) {
-      console.warn('[PPB] Blocks not found. In theme add: window.__ppb_blocks = {{ product.metafields.page_pro.page_blocks | json }};');
-      return;
+      blocksData = await fetchBlocks(storeId, productIdResolved);
     }
 
     try {
       const data = typeof blocksData === 'string' ? JSON.parse(blocksData) : blocksData;
       if (data?.blocks?.length > 0) {
+        ensureStylesheet();
         renderBlocks(data.blocks, container);
-        sendEvent(storeId, productId, 'page_view', { templateId: data.templateId ?? null });
+        sendEvent(storeId, productIdResolved, 'page_view', { templateId: data.templateId ?? null });
+      } else if (container.dataset.pageProAuto === 'true') {
+        container.remove();
       }
     } catch (e) {
       console.error('[PPB] Erro ao parsear blocos:', e);
