@@ -10,6 +10,8 @@ import type { ProductPreviewData } from '@/components/editor/ProductPagePreview'
 import type { BlockType, BlockEffect } from '@/types/blocks';
 import { fetchWithNexoAuth } from '@/lib/nexo/client';
 
+const AUTH_SAVE_MESSAGE = 'Abra o Page Pro pelo painel admin da Nuvemshop para salvar e publicar na loja.';
+
 interface BlockData {
   id?: number;
   type: BlockType;
@@ -37,6 +39,8 @@ function EditorContent() {
   useEffect(() => {
     if (!productId) return;
     setLoading(true);
+    setAuthError(false);
+    setSaveWarning(null);
     fetchWithNexoAuth(`/api/blocks?productId=${productId}`)
       .then((r) => {
         if (r.status === 401) {
@@ -78,6 +82,11 @@ function EditorContent() {
   })();
 
   async function handleSave() {
+    if (authError) {
+      setSaveWarning(AUTH_SAVE_MESSAGE);
+      return;
+    }
+
     setSaving(true);
     setSaveWarning(null);
     try {
@@ -89,7 +98,7 @@ function EditorContent() {
 
       if (res.status === 401) {
         setAuthError(true);
-        alert('Sessão não autenticada. Abra o Page Pro pelo painel admin da Nuvemshop para salvar.');
+        setSaveWarning(AUTH_SAVE_MESSAGE);
         return;
       }
 
@@ -103,7 +112,7 @@ function EditorContent() {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (e) {
-      alert('Erro ao salvar. Tente novamente.');
+      setSaveWarning('Erro ao salvar. Recarregue a página e tente novamente pelo painel admin da Nuvemshop.');
     } finally {
       setSaving(false);
     }
@@ -128,7 +137,12 @@ function EditorContent() {
       contentClassName="flex h-full flex-col p-0"
       actions={[
         { label: 'Voltar para produtos', href: '/products', variant: 'ghost' },
-        { label: saving ? 'Salvando...' : saved ? 'Salvo' : 'Salvar e publicar', onClick: handleSave, disabled: saving },
+        {
+          label: authError ? 'Salvar pelo painel admin' : saving ? 'Salvando...' : saved ? 'Salvo' : 'Salvar e publicar',
+          onClick: handleSave,
+          disabled: saving,
+          variant: authError ? 'ghost' : undefined,
+        },
       ]}
     >
       <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-[var(--line)] bg-white px-5">
