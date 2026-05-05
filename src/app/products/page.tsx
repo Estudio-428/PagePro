@@ -19,19 +19,30 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState(false);
 
   useEffect(() => {
     setLoading(true);
     setError(null);
+    setAuthError(false);
     fetchWithNexoAuth(`/api/products?page=${page}&per_page=50`)
       .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        if (!r.ok) {
+          const error = new Error(`HTTP ${r.status}`);
+          error.name = String(r.status);
+          throw error;
+        }
         return r.json();
       })
       .then((d) => setProducts(d.products ?? []))
-      .catch(() => {
+      .catch((err) => {
         setProducts([]);
-        setError('Não foi possível carregar os produtos.');
+        if (err?.name === '401') {
+          setAuthError(true);
+          setError('Abra o Page Pro pelo painel admin da Nuvemshop para carregar os produtos da loja.');
+          return;
+        }
+        setError('Não foi possível carregar os produtos. Recarregue a página ou tente novamente pelo painel admin.');
       })
       .finally(() => setLoading(false));
   }, [page]);
@@ -63,8 +74,19 @@ export default function ProductsPage() {
         {loading ? (
           <div className="pp-card py-12 text-center text-[var(--muted)]">Carregando produtos...</div>
         ) : error ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-6 py-4 text-sm font-medium text-red-700">
-            {error}
+          <div className={`rounded-lg border px-6 py-5 text-sm font-medium ${
+            authError ? 'border-[var(--amber)] bg-[var(--amber-50)] text-[#7a5200]' : 'border-red-200 bg-red-50 text-red-700'
+          }`}>
+            <p className="font-bold">{authError ? 'Sessão local sem autenticação' : 'Falha ao carregar produtos'}</p>
+            <p className="mt-1 max-w-[70ch]">{error}</p>
+            {authError && (
+              <Link
+                href="/editor?productId=295914599&productName=Refletor%20LED%2030W"
+                className="pp-btn pp-btn-ghost mt-4"
+              >
+                Abrir produto de teste
+              </Link>
+            )}
           </div>
         ) : (
           <>

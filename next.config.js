@@ -3,6 +3,7 @@ const path = require('path');
 
 const nextConfig = {
   output: 'standalone',
+  allowedDevOrigins: ['127.0.0.1'],
   async redirects() {
     return [
       { source: '/', destination: '/products', permanent: false },
