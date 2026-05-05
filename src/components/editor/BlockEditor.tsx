@@ -136,76 +136,179 @@ export function BlockEditor({ blocks, onChange, productId = 0, productName = 'Pr
     .sort((a, b) => a.block.order - b.block.order);
 
   return (
-    <div className="grid h-full flex-1 grid-cols-[300px_minmax(420px,1fr)_330px] overflow-hidden">
+    <div className="grid h-full flex-1 grid-cols-[360px_minmax(460px,1fr)_292px] overflow-hidden">
       <div className="flex min-w-0 flex-col border-r border-[var(--line)] bg-white">
-        <div className="border-b border-[var(--line)] p-4">
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--muted-2)]">Adicionar bloco</p>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {BLOCK_TYPES.map((bt) => (
-              <button
-                key={bt.type}
-                onClick={() => addBlock(bt.type)}
-                className="flex min-h-[68px] flex-col items-start justify-between rounded-lg border border-[var(--line)] bg-white p-3 text-left text-[12px] font-bold text-[var(--foreground)] transition hover:border-[var(--pink)] hover:bg-[var(--pink-50)] hover:text-[var(--pink)]"
-              >
-                <Icon name={bt.icon} />
-                <span>{bt.label}</span>
-              </button>
-            ))}
+        <div className="flex h-14 shrink-0 items-center gap-3 border-b border-[var(--line)] px-5">
+          <span className="grid h-9 w-9 place-items-center rounded-lg bg-[var(--pink-50)] text-[var(--pink)]">
+            <Icon name="settings" />
+          </span>
+          <div className="min-w-0">
+            <p className="font-display text-[16px] font-bold">Customizar produto</p>
+            <p className="text-xs text-[var(--muted)]">{blocks.length} blocos configurados</p>
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto bg-[#fafafb] p-4" onClick={() => setSelectedIdx(null)}>
-          <p className="mb-3 text-xs font-bold uppercase tracking-[0.12em] text-[var(--muted-2)]">Ordem dos blocos ({blocks.length})</p>
-          {blocks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--line-strong)] bg-white py-14 text-[var(--muted-2)]">
-              <Icon name="box" className="mb-3 h-10 w-10" />
-              <p className="max-w-[180px] text-center text-sm">Clique em um bloco acima para adicionar</p>
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <details className="border-b border-[var(--line)]" open>
+            <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-sm font-bold">
+              Adicionar bloco
+              <span className="text-[var(--muted-2)]">+</span>
+            </summary>
+            <div className="grid grid-cols-2 gap-2 px-5 pb-5">
+              {BLOCK_TYPES.map((bt) => (
+                <button
+                  key={bt.type}
+                  type="button"
+                  onClick={() => addBlock(bt.type)}
+                  className="flex min-h-[66px] flex-col items-start justify-between rounded-lg border border-[var(--line)] bg-white p-3 text-left text-[12px] font-bold text-[var(--foreground)] transition hover:border-[var(--pink)] hover:bg-[var(--pink-50)] hover:text-[var(--pink)]"
+                >
+                  <Icon name={bt.icon} />
+                  <span>{bt.label}</span>
+                </button>
+              ))}
             </div>
-          ) : (
-            <div className="space-y-2">
-              {orderedBlocks.map(({ block, index }) => {
-                const bt = BLOCK_TYPES.find((b) => b.type === block.type);
-                return (
-                  <div
-                    key={`${block.id ?? 'new'}-${index}`}
-                    onClick={(e) => { e.stopPropagation(); setSelectedIdx(index); }}
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border bg-white px-3 py-3 transition ${
-                      selectedIdx === index ? 'border-[var(--pink)] shadow-sm' : 'border-[var(--line)] hover:border-[var(--line-strong)]'
-                    }`}
-                  >
-                    <span className="text-[var(--pink)]"><Icon name={bt?.icon ?? 'text'} /></span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold text-[var(--foreground)]">{block.title || bt?.label}</p>
-                      <p className="text-xs text-[var(--muted-2)]">{bt?.label} · {block.effect}</p>
-                    </div>
-                    <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                      <button type="button" onClick={() => moveBlock(index, 'up')} disabled={index === 0} className="grid h-7 w-7 place-items-center rounded text-[var(--muted-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] disabled:opacity-30" aria-label="Mover para cima">↑</button>
-                      <button type="button" onClick={() => moveBlock(index, 'down')} disabled={index === blocks.length - 1} className="grid h-7 w-7 place-items-center rounded text-[var(--muted-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] disabled:opacity-30" aria-label="Mover para baixo">↓</button>
-                      <button type="button" onClick={() => removeBlock(index)} className="grid h-7 w-7 place-items-center rounded text-red-400 hover:bg-red-50 hover:text-red-600" aria-label="Remover bloco">×</button>
-                    </div>
-                  </div>
-                );
-              })}
+          </details>
+
+          <details className="border-b border-[var(--line)]" open>
+            <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-sm font-bold">
+              Ordem dos blocos
+              <span className="rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-xs text-[var(--muted)]">{blocks.length}</span>
+            </summary>
+            <div className="px-5 pb-5" onClick={() => setSelectedIdx(null)}>
+              {blocks.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--line-strong)] bg-[var(--surface-2)] py-12 text-[var(--muted-2)]">
+                  <Icon name="box" className="mb-3 h-9 w-9" />
+                  <p className="max-w-[200px] text-center text-sm">Clique em um bloco acima para começar.</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {orderedBlocks.map(({ block, index }) => {
+                    const bt = BLOCK_TYPES.find((b) => b.type === block.type);
+                    return (
+                      <div
+                        key={`${block.id ?? 'new'}-${index}`}
+                        onClick={(e) => { e.stopPropagation(); setSelectedIdx(index); }}
+                        className={`flex cursor-pointer items-center gap-3 rounded-lg border bg-white px-3 py-3 transition ${
+                          selectedIdx === index ? 'border-[var(--pink)] shadow-sm' : 'border-[var(--line)] hover:border-[var(--line-strong)]'
+                        }`}
+                      >
+                        <span className="text-[var(--pink)]"><Icon name={bt?.icon ?? 'text'} /></span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-bold text-[var(--foreground)]">{block.title || bt?.label}</p>
+                          <p className="text-xs text-[var(--muted-2)]">{bt?.label} · {block.isVisible ? 'Visível' : 'Oculto'}</p>
+                        </div>
+                        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                          <button type="button" onClick={() => moveBlock(index, 'up')} disabled={index === 0} className="grid h-7 w-7 place-items-center rounded text-[var(--muted-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] disabled:opacity-30" aria-label="Mover para cima">↑</button>
+                          <button type="button" onClick={() => moveBlock(index, 'down')} disabled={index === blocks.length - 1} className="grid h-7 w-7 place-items-center rounded text-[var(--muted-2)] hover:bg-[var(--surface-2)] hover:text-[var(--foreground)] disabled:opacity-30" aria-label="Mover para baixo">↓</button>
+                          <button type="button" onClick={() => removeBlock(index)} className="grid h-7 w-7 place-items-center rounded text-red-400 hover:bg-red-50 hover:text-red-600" aria-label="Remover bloco">×</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
+          </details>
+
+          <details className="border-b border-[var(--line)]" open>
+            <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-sm font-bold">
+              Configurar bloco
+              <span className="text-[var(--muted-2)]">{selected ? 'editando' : 'selecione'}</span>
+            </summary>
+            {selected !== null && selectedIdx !== null ? (
+              <BlockConfigPanel
+                block={selected}
+                onUpdate={(partial) => updateBlock(selectedIdx, partial)}
+              />
+            ) : (
+              <div className="px-5 pb-5">
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-[var(--line-strong)] bg-[var(--surface-2)] py-12 text-gray-400">
+                  <Icon name="settings" className="mb-3 h-8 w-8" />
+                  <p className="max-w-[220px] text-center text-sm">Selecione um bloco na ordem para abrir as configurações.</p>
+                </div>
+              </div>
+            )}
+          </details>
         </div>
       </div>
 
       <ProductPagePreview productId={productId} productName={productName} product={product} blocks={blocks} />
 
-      <div className="min-w-0 overflow-y-auto border-l border-[var(--line)] bg-white">
-        {selected !== null && selectedIdx !== null ? (
-          <BlockConfigPanel
-            block={selected}
-            onUpdate={(partial) => updateBlock(selectedIdx, partial)}
-          />
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full py-12 text-gray-400">
-            <Icon name="settings" className="h-8 w-8 mb-2" />
-            <p className="text-sm text-center px-6">Selecione um bloco para configurar</p>
-          </div>
-        )}
+      <EditorAssistPanel blocks={blocks} selected={selected} />
+    </div>
+  );
+}
+
+function EditorAssistPanel({ blocks, selected }: { blocks: BlockData[]; selected: BlockData | null }) {
+  const visibleCount = blocks.filter((block) => block.isVisible).length;
+  const hiddenCount = blocks.length - visibleCount;
+  const selectedType = selected ? BLOCK_TYPES.find((blockType) => blockType.type === selected.type)?.label : null;
+
+  return (
+    <aside className="flex min-w-0 flex-col border-l border-[var(--line)] bg-white">
+      <div className="flex h-14 shrink-0 items-center justify-between border-b border-[var(--line)] px-5">
+        <div>
+          <p className="font-display text-[16px] font-bold">Ajuda</p>
+          <p className="text-xs text-[var(--muted)]">Page Pro</p>
+        </div>
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--sidebar)] text-white">
+          <Icon name="help" />
+        </span>
       </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto p-5">
+        <div className="rounded-lg border border-[var(--line)] bg-[var(--surface-2)] p-4">
+          <p className="text-sm font-bold">Fluxo recomendado</p>
+          <div className="mt-3 space-y-3 text-sm text-[var(--muted)]">
+            <StatusLine done={blocks.length > 0} label="Adicionar blocos" />
+            <StatusLine done={visibleCount > 0} label="Manter blocos visíveis" />
+            <StatusLine done={Boolean(selected)} label="Configurar conteúdo" />
+            <StatusLine done={blocks.length > 0} label="Salvar e publicar" />
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-lg border border-[var(--line)] p-4">
+          <p className="text-sm font-bold">Resumo</p>
+          <dl className="mt-3 space-y-2 text-sm">
+            <div className="flex items-center justify-between">
+              <dt className="text-[var(--muted)]">Blocos</dt>
+              <dd className="font-bold">{blocks.length}</dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-[var(--muted)]">Visíveis</dt>
+              <dd className="font-bold text-[var(--green)]">{visibleCount}</dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-[var(--muted)]">Ocultos</dt>
+              <dd className="font-bold text-[var(--muted)]">{hiddenCount}</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div className="mt-4 rounded-lg border border-[var(--line)] p-4">
+          <p className="text-sm font-bold">{selectedType ? `Editando ${selectedType}` : 'Nenhum bloco selecionado'}</p>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            {selectedType
+              ? 'As alterações aparecem no preview central antes de publicar na loja.'
+              : 'Escolha um bloco na coluna da esquerda para editar textos, imagens, selos e efeitos.'}
+          </p>
+        </div>
+
+        <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-6 text-blue-800">
+          Use os ícones de desktop e mobile no preview para validar como o bloco vai aparecer nos dois tamanhos.
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function StatusLine({ done, label }: { done: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`grid h-5 w-5 place-items-center rounded-full text-[11px] font-bold ${done ? 'bg-[var(--green)] text-white' : 'bg-white text-[var(--muted-2)]'}`}>
+        {done ? <Icon name="check" className="h-3 w-3" /> : null}
+      </span>
+      <span>{label}</span>
     </div>
   );
 }

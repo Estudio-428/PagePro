@@ -47,13 +47,13 @@ export default function ProductsPage() {
       subtitle="Escolha um produto para editar e publicar blocos personalizados."
       actions={[{ label: 'Importar em massa', href: '/import' }]}
     >
-        <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="mb-6 flex items-center justify-between gap-4 rounded-lg border border-[var(--line)] bg-white p-4 shadow-sm">
           <input
             type="search"
             placeholder="Buscar produto..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pp-input h-10 w-full max-w-sm px-3"
+            className="pp-input h-11 w-full max-w-xl px-4"
           />
           <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--muted-2)]">
             Página {page}
@@ -63,67 +63,66 @@ export default function ProductsPage() {
         {loading ? (
           <div className="pp-card py-12 text-center text-[var(--muted)]">Carregando produtos...</div>
         ) : error ? (
-          <div className="rounded-[10px] border border-red-200 bg-red-50 px-6 py-4 text-sm font-medium text-red-700">
+          <div className="rounded-lg border border-red-200 bg-red-50 px-6 py-4 text-sm font-medium text-red-700">
             {error}
           </div>
         ) : (
-          <div className="pp-card overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-[var(--surface-2)] text-[var(--muted)]">
-                <tr>
-                  <th className="text-left px-6 py-3">Produto</th>
-                  <th className="text-left px-6 py-3">Template</th>
-                  <th className="text-left px-6 py-3">Status</th>
-                  <th className="text-right px-6 py-3">Ações</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--line)]">
+          <>
+            {filtered.length === 0 ? (
+              <div className="pp-card px-6 py-12 text-center text-[var(--muted)]">
+                Nenhum produto encontrado.
+              </div>
+            ) : (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
                 {filtered.map((p) => {
                   const name = p.name?.pt ?? p.name?.es ?? Object.values(p.name)[0] ?? `Produto ${p.id}`;
+                  const active = Boolean(p.appConfig?.isActive);
                   return (
-                    <tr key={p.id} className="hover:bg-[var(--background)]">
-                      <td className="px-6 py-3">
-                        <div className="flex items-center gap-3">
-                          {p.images?.[0] && (
-                            <img src={p.images[0].src} alt="" className="w-10 h-10 object-cover rounded" />
+                    <article key={p.id} className="pp-card flex min-h-[220px] flex-col overflow-hidden p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--surface-2)]">
+                          {p.images?.[0] ? (
+                            <img src={p.images[0].src} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="text-xs font-bold text-[var(--muted-2)]">PP</span>
                           )}
-                          <div>
-                            <p className="font-bold text-[var(--foreground)]">{name}</p>
-                            <p className="text-xs text-[var(--muted-2)]">ID: {p.id}</p>
-                          </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-3 text-[var(--muted)]">
-                        {p.templateLink?.template.name ?? '—'}
-                      </td>
-                      <td className="px-6 py-3">
-                        {p.appConfig?.isActive ? (
-                          <span className="inline-block rounded-full bg-[var(--green-50)] px-2 py-0.5 text-xs font-bold text-[var(--green)]">Ativo</span>
+                        <div className="min-w-0 flex-1">
+                          <h2 className="line-clamp-2 text-[15px] font-extrabold leading-snug text-[var(--foreground)]">{name}</h2>
+                          <p className="mt-1 text-xs text-[var(--muted-2)]">Produto {p.id}</p>
+                        </div>
+                        {active ? (
+                          <span className="shrink-0 rounded-full bg-[var(--green-50)] px-2 py-0.5 text-xs font-bold text-[var(--green)]">Ativo</span>
                         ) : (
-                          <span className="inline-block rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-xs font-bold text-[var(--muted)]">Sem config</span>
+                          <span className="shrink-0 rounded-full bg-[var(--surface-2)] px-2 py-0.5 text-xs font-bold text-[var(--muted)]">Novo</span>
                         )}
-                      </td>
-                      <td className="px-6 py-3 text-right">
-                        <Link
-                          href={`/editor?productId=${p.id}&productName=${encodeURIComponent(name)}`}
-                          className="text-sm font-bold text-[var(--pink)] hover:text-[var(--pink-deep)]"
-                        >
-                          Editar blocos
-                        </Link>
-                      </td>
-                    </tr>
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-[var(--muted)]">
+                        <span className="rounded-md border border-[var(--line)] px-2 py-1">
+                          {p.templateLink?.template.name ?? 'Sem template'}
+                        </span>
+                        {p.appConfig?.metafieldId && (
+                          <span className="rounded-md border border-[var(--line)] px-2 py-1">Publicado</span>
+                        )}
+                      </div>
+
+                      <p className="mt-4 flex-1 text-sm leading-6 text-[var(--muted)]">
+                        Edite descrições, imagens, selos, tabelas e FAQs com pré-visualização da página do produto.
+                      </p>
+
+                      <Link
+                        href={`/editor?productId=${p.id}&productName=${encodeURIComponent(name)}`}
+                        className="pp-btn pp-btn-ghost mt-4 w-full"
+                      >
+                        Entrar
+                      </Link>
+                    </article>
                   );
                 })}
-                {filtered.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-[var(--muted)]">
-                      Nenhum produto encontrado.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+              </div>
+            )}
+          </>
         )}
 
         <div className="flex items-center justify-center gap-4 mt-6">
